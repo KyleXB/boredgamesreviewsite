@@ -1,0 +1,29 @@
+# Dependencies
+**/node_modules/
+
+# Secrets and local environment settings
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local SQLite database files
+**/*.db
+**/*.db-journal
+**/*.sqlite
+**/*.sqlite3
+
+# Generated Prisma client
+**/generated/prisma/
+
+# Build output and test coverage
+**/dist/
+**/build/
+**/coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# macOS files
+.DS_Store
+**/.DS_Store
