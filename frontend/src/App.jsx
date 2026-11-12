@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router'
+import { BrowserRouter, Routes, Route } from 'react-router'
+import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import GamePage from './pages/GamePage'
 import './App.css'
@@ -6,7 +7,7 @@ import './App.css'
 export default function App() {
   return (
     <BrowserRouter>
-      <nav><Link to="/">Home</Link></nav>
+      <Header />
 
       <Routes>
         <Route path="/" element={<HomePage />} />

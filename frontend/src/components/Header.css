@@ -1,0 +1,141 @@
+/* Header container: strictly single row, never wraps */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap; /* Forces everything on a single line */
+  gap: 12px;
+  padding: 10px 16px;
+  background-color: #000000;
+  border-bottom: 1px solid #ffffff;
+  color: #ffffff;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden; /* Prevents overflow escaping */
+}
+
+/* Brand Logo (BG) */
+.header-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+/* Search bar with attached dropdown: grows, shrinks, and clips cleanly */
+.header-search-form {
+  display: flex;
+  align-items: stretch;
+  flex: 1 1 auto;
+  max-width: 650px;
+  min-width: 0; /* Critical for flex child to shrink below its content size */
+  border: 1px solid #ffffff;
+  background-color: transparent;
+  overflow: hidden; /* Allows input text/placeholder to clip inside */
+}
+
+.search-dropdown {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-right: 1px solid #ffffff;
+  padding: 8px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.search-dropdown option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.search-input {
+  flex: 1 1 0;
+  min-width: 0; /* Allows input to shrink as small as needed */
+  background-color: transparent;
+  color: #ffffff;
+  border: none;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  overflow: hidden;
+  text-overflow: clip; /* Text disappears behind the search bar border if shrunk */
+  white-space: nowrap;
+}
+
+.search-input::placeholder {
+  color: #a0a0a0;
+  text-overflow: clip;
+}
+
+/* Auth Buttons (Register & Login) */
+.header-auth {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0; /* Auth remains visible and doesn't get squashed */
+}
+
+.auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 14px;
+  border: 1px solid #ffffff;
+  background-color: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Adjacent border collapse so they share the middle line */
+.auth-btn + .auth-btn {
+  border-left: none;
+}
+
+.auth-btn:hover {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Dynamic space saving on very small screens while keeping 1 single row */
+@media (max-width: 600px) {
+  .site-header {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    font-size: 22px;
+  }
+
+  .auth-btn {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  .search-dropdown {
+    padding: 6px 6px;
+    font-size: 13px;
+  }
+
+  .search-input {
+    padding: 6px 6px;
+    font-size: 13px;
+  }
+}
