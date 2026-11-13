@@ -18,27 +18,46 @@ function SortOrderIcon({ direction }) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {/* 4 horizontal bars with varying widths */}
       <line x1="3" y1="5" x2="14" y2="5" />
       <line x1="3" y1="10" x2="11" y2="10" />
       <line x1="3" y1="15" x2="8" y2="15" />
       <line x1="3" y1="20" x2="5" y2="20" />
 
-      {/* Directional arrow based on current sort: A-Z (down) vs Z-A (up) */}
       {direction === 'asc' ? (
-        // Downward arrow: A-Z
         <>
           <line x1="19" y1="5" x2="19" y2="19" />
           <polyline points="15 15 19 19 23 15" />
         </>
       ) : (
-        // Upward arrow: Z-A
         <>
           <line x1="19" y1="19" x2="19" y2="5" />
           <polyline points="15 9 19 5 23 9" />
         </>
       )}
     </svg>
+  )
+}
+
+// 5-Star Rating Component for Popular list
+function StarRating({ rating }) {
+  const numRating = parseFloat(rating)
+  return (
+    <div className="star-row" title={`Rated ${numRating.toFixed(1)} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((starIndex) => {
+        const fillPercent = Math.max(0, Math.min(100, (numRating - (starIndex - 1)) * 100))
+        return (
+          <span key={starIndex} className="star-wrapper">
+            <span className="star-empty">★</span>
+            <span 
+              className="star-filled" 
+              style={{ width: `${fillPercent}%` }}
+            >
+              ★
+            </span>
+          </span>
+        )
+      })}
+    </div>
   )
 }
 
@@ -63,7 +82,7 @@ export default function HomePage() {
     }
   }
 
-  // Mock sample games for Popular This Week (10 games as shown in wireframe)
+  // Sample games for Popular This Week with 1-decimal ratings
   const popularGames = [
     { id: 'catan', title: 'Catan', tags: ['Strategy', 'Trading'], rating: '4.2' },
     { id: 'pandemic', title: 'Pandemic', tags: ['Co-op', 'Strategy'], rating: '4.5' },
@@ -77,56 +96,49 @@ export default function HomePage() {
     { id: 'dune-imperium', title: 'Dune: Imperium', rating: '4.8' }
   ]
 
-  // Mock recommendations data
+  // Mock recommendations data (star ratings removed as requested)
   const recommendedGames = [
     {
       id: 'wingspan',
       title: 'Wingspan',
       year: '2019',
-      image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80',
-      rating: '4.7'
+      image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80'
     },
     {
       id: 'scythe',
       title: 'Scythe',
       year: '2016',
-      image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=400&q=80',
-      rating: '4.5'
+      image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=400&q=80'
     },
     {
       id: 'terraforming-mars',
       title: 'Terraforming Mars',
       year: '2016',
-      image: 'https://images.unsplash.com/photo-1563941402622-4e7a488bcc57?auto=format&fit=crop&w=400&q=80',
-      rating: '4.8'
+      image: 'https://images.unsplash.com/photo-1563941402622-4e7a488bcc57?auto=format&fit=crop&w=400&q=80'
     },
     {
       id: 'dune-imperium',
       title: 'Dune: Imperium',
       year: '2020',
-      image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=400&q=80',
-      rating: '4.8'
+      image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=400&q=80'
     },
     {
       id: 'azul',
       title: 'Azul',
       year: '2017',
-      image: 'https://images.unsplash.com/photo-1585504198199-20277593b94f?auto=format&fit=crop&w=400&q=80',
-      rating: '4.6'
+      image: 'https://images.unsplash.com/photo-1585504198199-20277593b94f?auto=format&fit=crop&w=400&q=80'
     },
     {
       id: 'everdell',
       title: 'Everdell',
       year: '2018',
-      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
-      rating: '4.4'
+      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80'
     },
     {
       id: 'root',
       title: 'Root',
       year: '2018',
-      image: 'https://images.unsplash.com/photo-1578374173705-969cbe6f2d6b?auto=format&fit=crop&w=400&q=80',
-      rating: '4.5'
+      image: 'https://images.unsplash.com/photo-1578374173705-969cbe6f2d6b?auto=format&fit=crop&w=400&q=80'
     }
   ]
 
@@ -224,21 +236,34 @@ export default function HomePage() {
 
           <div className="popular-list">
             {popularGames.map((game, index) => (
-              <div key={game.id} className="popular-item">
-                <Link to={`/game/${game.id}`} className="popular-name">
-                  <span className="popular-rank">#{index + 1}</span> {game.title}
+              <div key={game.id} className="popular-item-card">
+                {/* Whole block click navigates to game page */}
+                <Link to={`/game/${game.id}`} className="popular-main-link" aria-label={`View ${game.title} game page`}>
+                  <div className="popular-main-info">
+                    <span className="popular-name">
+                      <span className="popular-rank">#{index + 1}</span> {game.title}
+                    </span>
+
+                    {game.tags && (
+                      <div className="popular-tags">
+                        {game.tags.map(tag => (
+                          <span key={tag} className="tag-badge">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </Link>
 
-                <div className="popular-meta">
-                  {game.tags && (
-                    <div className="popular-tags">
-                      {game.tags.map(tag => (
-                        <span key={tag} className="tag-badge">{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                  <span className="rating-pill">⭐ {game.rating}</span>
-                </div>
+                {/* Distinct review bubble clickable to the game's reviews */}
+                <Link 
+                  to={`/game/${game.id}#reviews`} 
+                  className="popular-rating-bubble" 
+                  title={`View reviews for ${game.title} (${parseFloat(game.rating).toFixed(1)} stars)`}
+                  aria-label={`View reviews for ${game.title}`}
+                >
+                  <StarRating rating={game.rating} />
+                  <span className="rating-score-text">{parseFloat(game.rating).toFixed(1)}</span>
+                </Link>
               </div>
             ))}
           </div>
@@ -279,7 +304,6 @@ export default function HomePage() {
                     <Link to={`/game/${game.id}`} key={game.id} className="rec-card">
                       <div className="rec-image-box">
                         <img src={game.image} alt={game.title} loading="lazy" />
-                        <span className="rec-rating">⭐ {game.rating}</span>
                       </div>
                       <div className="rec-info">
                         <h3 className="rec-title">{game.title}</h3>
