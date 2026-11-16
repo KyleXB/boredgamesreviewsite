@@ -1,0 +1,170 @@
+.game-page {
+  max-width: none;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 150px;
+  text-align: left;
+}
+
+.game-page__media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 48px;
+}
+
+.game-page__details {
+  display: flex;
+  flex-direction: column;
+  margin-left: -50px;
+}
+
+.game-page__title {
+  font-size: 4rem;
+  text-transform: capitalize;
+}
+
+.game-page__title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.game-page__year {
+  font-size: 1.6rem;
+  color: #c8c8c88e;
+}
+
+.game-image {
+  position: relative;
+  width: 350px;
+  aspect-ratio: 3 / 4;
+  flex: 0 0 auto;
+}
+
+.game-image__card {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  object-fit: cover;
+  border: 1px solid #aaa;
+  background: #111;
+}
+
+.game-gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-gallery__controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.game-page__facts {
+  display:grid ;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid #777;
+  border-bottom: 1px solid #777;
+  margin-top: 32px;
+}
+
+.game-page__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  font-size: 0.75rem;
+}
+
+.game-page__fact + .game-page__fact {
+  border-left: 1px solid #777;
+}
+
+.game-page__fact span {
+  text-transform: uppercase;
+}
+
+.game-page__about {
+  margin-top: 50px;
+}
+
+.game-page__about h2 {
+  margin-bottom: 12px;
+}
+
+.game-page__about p {
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.game-ratings {
+  display: flex;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.game-ratings > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-stars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.game-stars > span {
+  color: #f5c542;
+  letter-spacing: 2px;
+}
+
+.game-stars strong {
+  font-size: 0.9rem;
+}
+
+.game-page__review-button {
+  margin-top: 20px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.game-page__expansions {
+  margin-top: 40px;
+}
+
+.game-page__expansions h2 {
+  margin-bottom: 16px;
+}
+
+.game-page__expansion-list {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 4px 4px 12px;
+}
+
+.game-page__expansion-card {
+  display: grid;
+  place-items: center;
+  flex: 0 0 200px;
+  aspect-ratio: 3 / 4;
+  padding: 16px;
+  box-sizing: border-box;
+  border: 1px solid #777;
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+}
+
+.game-page__expansion-card:hover {
+  border-color: currentColor;
+}
