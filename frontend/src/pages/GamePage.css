@@ -1,23 +1,26 @@
 .game-page {
+  width: 100%;
   max-width: none;
+  box-sizing: border-box;
   margin: 0;
   display: flex;
   align-items: flex-start;
-  gap: 150px;
+  gap: 72px;
+  overflow-x: clip;
   text-align: left;
 }
 
 .game-page__media {
   display: flex;
+  flex: 0 0 350px;
   flex-direction: column;
   align-items: center;
   margin-left: 48px;
 }
 
 .game-page__details {
-  display: flex;
-  flex-direction: column;
-  margin-left: -50px;
+  flex: 1 0 1000px;
+  min-width: 1000px;
 }
 
 .game-page__title {
@@ -135,6 +138,7 @@
   margin-top: 20px;
   padding: 10px 16px;
   cursor: pointer;
+  align-self: center;
 }
 
 .game-page__expansions {
@@ -148,6 +152,8 @@
 .game-page__expansion-list {
   display: flex;
   gap: 20px;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   padding: 4px 4px 12px;
 }
