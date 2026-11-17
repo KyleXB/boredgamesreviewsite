@@ -20,5 +20,9 @@
   },
   "devDependencies": {
     "prisma": "^7.10.1"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true,
+    "better-sqlite3@12.11.1": true
   }
 }
