@@ -1,0 +1,113 @@
+/* Shared styles for LoginPage, SignupPage and ForgotPasswordPage */
+
+.auth-page {
+  background: #131313;
+  color: #f2f2f2;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding-top: 44px;
+  box-sizing: border-box;
+}
+
+.auth-page *,
+.auth-page *::before,
+.auth-page *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.auth-logo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 112px;
+  height: auto;
+  display: block;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 310px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 38px;
+}
+
+.auth-field label {
+  margin-bottom: 8px;
+}
+
+.auth-page input,
+.auth-page button {
+  background: #131313;
+  color: #f2f2f2;
+  border: 1.5px solid #bdbdbd;
+  border-radius: 8px;
+  font: inherit;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.auth-page input {
+  width: 246px;
+  height: 62px;
+  padding: 0 14px;
+  font-size: 15px;
+  text-align: center;
+}
+
+.auth-page input:focus { border-color: #ffffff; }
+.auth-page input.invalid { border-color: #e05a5a; }
+.auth-page input.valid { border-color: #6fcf8a; }
+
+.auth-page button { cursor: pointer; }
+.auth-page button:hover { background: #1e1e1e; border-color: #ffffff; }
+.auth-page button:active { background: #262626; }
+.auth-page button:disabled { opacity: 0.6; cursor: default; }
+
+.auth-primary-btn {
+  width: 246px;
+  height: 62px;
+  margin-top: 2px;
+}
+
+.auth-secondary {
+  display: flex;
+  justify-content: space-between;
+  width: 308px;
+  margin-top: 20px;
+}
+
+.auth-secondary.centered {
+  justify-content: center;
+}
+
+.auth-secondary button {
+  width: 124px;
+  height: 62px;
+}
+
+.auth-secondary button.wide {
+  width: 186px;
+}
+
+.auth-message {
+  margin-top: 26px;
+  min-height: 16px;
+  max-width: 280px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.auth-message.error { color: #e05a5a; }
+.auth-message.success { color: #6fcf8a; }
