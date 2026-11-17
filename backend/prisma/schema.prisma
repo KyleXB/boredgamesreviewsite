@@ -1,13 +1,141 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
 datasource db {
   provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// 1. GAME & METADATA
+// ----------------------------------------------------
+
+model Game {
+  id              String           @id @default(cuid())
+  bggId           Int?             @unique
+  title           String
+  description     String?
+  yearPublished   Int?
+  minPlayers      Int?
+  maxPlayers      Int?
+  minPlaytime     Int?
+  maxPlaytime     Int?
+  minAge          Int?             @default(0)
+  complexity      Float?           @default(0.0)
+  thumbnail       String?
+  image           String?
+  publisher       String?
+  isExpansion     Boolean          @default(false)
+
+  // Self-relation: Base Game <-> Expansions
+  baseGameId      String?
+  baseGame        Game?            @relation("GameExpansions", fields: [baseGameId], references: [id], onDelete: SetNull)
+  expansions      Game[]           @relation("GameExpansions")
+
+  // Many-to-Many Relationships
+  genres          Genre[]
+  mechanics       Mechanic[]
+  themes          Theme[]
+
+  // User Interactions
+  reviews         Review[]
+  userStatuses    UserGameStatus[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Genre {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  games     Game[]
+}
+
+model Mechanic {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  games     Game[]
+}
+
+model Theme {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  games     Game[]
+}
+
+// ----------------------------------------------------
+// 2. USERS & ROLES
+// ----------------------------------------------------
+
+model User {
+  id            String           @id @default(cuid())
+  email         String           @unique
+  passwordHash  String
+  username      String           @unique
+  dateOfBirth   DateTime?
+  role          String           @default("USER") // "USER", "MODERATOR", "ADMIN"
+  isBanned      Boolean          @default(false)
+
+  reviews       Review[]
+  comments      Comment[]
+  gameStatuses  UserGameStatus[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+// ----------------------------------------------------
+// 3. RATINGS, REVIEWS & DISCUSSIONS
+// ----------------------------------------------------
+
+model Review {
+  id        String    @id @default(cuid())
+  rating    Int       // 1 - 5 stars
+  content   String?
+  
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  gameId    String
+  game      Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  comments  Comment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, gameId]) // One review per user per game (FR-06)
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  reviewId  String
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ----------------------------------------------------
+// 4. USER GAME STATUS
+// ----------------------------------------------------
+
+model UserGameStatus {
+  id        String   @id @default(cuid())
+  status    String   // "VIEWED", "PLAYED", "OWNED", "WISHLIST"
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, gameId, status])
 }
