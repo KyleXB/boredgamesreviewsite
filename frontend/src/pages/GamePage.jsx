@@ -50,13 +50,6 @@ export default function GamePage() {
         </div>
 
           <div className="game-ratings">
-            <div>
-              <span>Global rating</span>
-              <div className="game-stars" aria-label="Global rating: 4.3 out of 5">
-                <span aria-hidden="true">★★★★☆</span>
-                <strong>4.3/5</strong>
-              </div>
-            </div>
 
             <div>
               <span>Your rating</span>
@@ -77,6 +70,19 @@ export default function GamePage() {
         <div className="game-page__title-row">
           <h1 className="game-page__title">{gameId}</h1>
           <span className="game-page__year"> (A random year)</span>
+
+          <div className="game-page__global-rating">
+            <span className="game-page__global-label">Global rating</span>
+
+            <div className="game-page__global-rating-main">
+              <span className="game-page__global-stars" aria-hidden="true">★★★★☆</span>
+
+              <div className="game-page__global-rating-score">
+                <strong>4.3<small>/5</small></strong>
+                <span className="game-page__global-rating-count">1,234 ratings</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="game-page__facts">
