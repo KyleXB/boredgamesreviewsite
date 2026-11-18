@@ -11,6 +11,9 @@
 **/*.db-journal
 **/*.sqlite
 **/*.sqlite3
+# Allow tracking the clean starter seed snapshot
+!**/seed.db
+
 
 # Generated Prisma client
 **/generated/prisma/
