@@ -89,6 +89,37 @@
   flex-shrink: 0; /* Auth remains visible and doesn't get squashed */
 }
 
+.user-profile-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.username-badge {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.role-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ffaa00;
+  border: 1px solid #ffaa00;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.auth-logout {
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .auth-btn {
   display: flex;
   align-items: center;
