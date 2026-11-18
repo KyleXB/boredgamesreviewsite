@@ -92,7 +92,7 @@
   background: #202b40;
 }
 
-/* Main card clickable area (navigates to game page) */
+/* Main card clickable area (navigates to game page with background splash) */
 .popular-main-link {
   display: flex;
   align-items: center;
@@ -101,6 +101,15 @@
   padding: 10px 12px;
   text-decoration: none;
   color: inherit;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  transition: filter 0.15s ease;
+}
+
+.popular-main-link:hover {
+  filter: brightness(1.08);
 }
 
 .popular-main-info {
@@ -544,7 +553,8 @@
   gap: 2px;
 }
 
-.category-scrollable-list li a {
+.category-scrollable-list li a,
+.category-scrollable-list .cat-item-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -556,7 +566,8 @@
   transition: background 0.12s ease, color 0.12s ease;
 }
 
-.category-scrollable-list li a:hover {
+.category-scrollable-list li a:hover,
+.category-scrollable-list .cat-item-row:hover {
   background: #1f2937;
   color: #60a5fa;
 }
