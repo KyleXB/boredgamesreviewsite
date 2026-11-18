@@ -72,6 +72,7 @@ const gameRepository = {
   // Category counts for landing page
   async getGenresWithCount() {
     return await prisma.genre.findMany({
+      where: { games: { some: {} } },
       select: {
         name: true,
         _count: { select: { games: true } }
@@ -82,6 +83,7 @@ const gameRepository = {
 
   async getMechanicsWithCount() {
     return await prisma.mechanic.findMany({
+      where: { games: { some: {} } },
       select: {
         name: true,
         _count: { select: { games: true } }
@@ -92,11 +94,49 @@ const gameRepository = {
 
   async getThemesWithCount() {
     return await prisma.theme.findMany({
+      where: { games: { some: {} } },
       select: {
         name: true,
         _count: { select: { games: true } }
       },
       orderBy: { name: 'asc' }
+    })
+  },
+
+  // Get games for Popular This Week
+  async getPopularGames(limit = 10) {
+    // For now: fetch games that have cover art, including genres and reviews
+    const totalCount = await prisma.game.count({ where: { image: { not: null } } })
+    const skip = Math.max(0, Math.floor(Math.random() * Math.max(1, totalCount - limit)))
+    
+    return await prisma.game.findMany({
+      where: { image: { not: null } },
+      skip,
+      take: limit,
+      include: {
+        genres: { take: 2, select: { name: true } },
+        mechanics: { take: 2, select: { name: true } },
+        reviews: { select: { rating: true } }
+      }
+    })
+  },
+
+  // Get random games with images for recommendations placeholder
+  async getRandomGames(limit = 12) {
+    const totalCount = await prisma.game.count({ where: { image: { not: null } } })
+    const skip = Math.max(0, Math.floor(Math.random() * Math.max(1, totalCount - limit)))
+    
+    return await prisma.game.findMany({
+      where: { image: { not: null } },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        yearPublished: true,
+        image: true,
+        thumbnail: true
+      }
     })
   },
 
