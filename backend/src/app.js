@@ -1,7 +1,9 @@
 // Express IWebAPI - Mounts presentation layer controllers
 const express = require('express')
+const cors = require('cors')
 const app = express()
 
+app.use(cors())
 app.use(express.json())
 
 // Mount controllers
