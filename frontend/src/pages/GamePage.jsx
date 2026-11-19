@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
+import { useEffect, useState } from 'react'
 import './GamePage.css'
+
+const API_BASE_URL = 'http://localhost:3001/api'
 
 const images = [
   '/placeholder3.jpg',
@@ -10,8 +12,46 @@ const images = [
 
 const hasReviewed = false // placeholder until review data exists
 
+function formatRange(min, max, unit) {
+  if (min == null && max == null) return 'Not available'
+  if (min == null) return `Up to ${max} ${unit}`
+  if (max == null) return `${min}+ ${unit}`
+  if (min === max) return `${min} ${unit}`
+  return `${min}–${max} ${unit}`
+}
+
 export default function GamePage() {
   const { gameId } = useParams()
+  const [game, setGame] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadGame() {
+      setLoading(true)
+      setError('')
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/games/${encodeURIComponent(gameId)}`
+        )
+
+        if (!response.ok) {
+          throw new Error(
+            response.status === 404 ? 'Game not found.' : 'Could not load game.'
+          )
+        }
+
+        setGame(await response.json())
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadGame()
+  }, [gameId])
   const [imageIndex, setImageIndex] = useState(0)
 
   const showPrevious = () => {
@@ -22,30 +62,27 @@ export default function GamePage() {
     setImageIndex((current) => (current + 1) % images.length)
   }
 
+  if (loading) return <main className="game-page">Loading game…</main>
+  if (error) return <main className="game-page">{error}</main>
+  if (!game) return null
+
   return (
     <main className="game-page">
 
       <div className='game-page__media'>
         <div className="game-gallery">
           <div className="game-image">
-            {images.map((src, offset) => {
-              const index = (imageIndex + offset) % images.length
-              return (<img
-                key={src}
-                className={`game-image__card game-image__card--${offset}`}
-                src={images[index]}
-                alt={offset === 0 ? `${gameId} board game` : ''}/>
-              )
-            })}
-          </div>
-          <div className="game-gallery__controls">
-            <button type="button" onClick={showPrevious} aria-label="Previous image">
-              ←
-            </button>
-            <span>{imageIndex + 1} / {images.length}</span>
-            <button type="button" onClick={showNext} aria-label="Next image">
-              →
-            </button>
+            {game.image || game.thumbnail ? (
+              <img
+                className="game-image__card"
+                src={game.image || game.thumbnail}
+                alt={game.title}
+              />
+            ) : (
+              <div className="game-image__card game-image__placeholder">
+                No image available
+              </div>
+            )}
           </div>
         </div>
 
@@ -68,8 +105,10 @@ export default function GamePage() {
 
       <div className="game-page__details">
         <div className="game-page__title-row">
-          <h1 className="game-page__title">{gameId}</h1>
-          <span className="game-page__year"> (A random year)</span>
+          <h1 className="game-page__title">{game.title}</h1>
+            {game.yearPublished != null && (
+              <span className="game-page__year">({game.yearPublished})</span>
+            )}
 
           <div className="game-page__global-rating">
             <span className="game-page__global-label">Global rating</span>
@@ -88,30 +127,29 @@ export default function GamePage() {
         <div className="game-page__facts">
           <div className="game-page__fact">
             <span>Players</span>
-            <strong>Random number of players</strong>
+            <strong>{formatRange(game.minPlayers, game.maxPlayers, 'players')}</strong>
           </div>
 
           <div className="game-page__fact">
             <span>Play time</span>
-            <strong>At least one min</strong>
+            <strong>{formatRange(game.minPlaytime, game.maxPlaytime, 'min')}</strong>
           </div>
 
           <div className="game-page__fact">
             <span>Age</span>
-            <strong>0+</strong>
+            <strong>{game.minAge == null ? 'Not available' : `${game.minAge}+`}</strong>
           </div>
 
           <div className="game-page__fact">
             <span>Publisher</span>
-            <strong> Random Studios</strong>
+            <strong>{game.publisher || 'Not available'}</strong>
           </div>
         </div>
 
         <section className="game-page__about">
           <h2>About this game</h2>
           <p>
-          <p>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum Lorem.</p>
-          <p>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum Lorem.</p>
+            {game.description || 'No description available.'}
           </p>
         </section>
 
@@ -119,12 +157,19 @@ export default function GamePage() {
           <h2>Expansions</h2>
 
           <div className="game-page__expansion-list">
-            <a href="#" className="game-page__expansion-card">Expansion 1</a>
-            <a href="#" className="game-page__expansion-card">Expansion 2</a>
-            <a href="#" className="game-page__expansion-card">Expansion 3</a>
-            <a href="#" className="game-page__expansion-card">Expansion 4</a>
-            <a href="#" className="game-page__expansion-card">Expansion 5</a>
-            <a href="#" className="game-page__expansion-card">Expansion 6</a>
+            {game.expansions?.length ? (
+              game.expansions.map((expansion) => (
+                <Link
+                  key={expansion.id}
+                  to={`/game/${expansion.id}`}
+                  className="game-page__expansion-card"
+                >
+                  {expansion.title}
+                </Link>
+              ))
+            ) : (
+              <p>No expansions listed.</p>
+            )}
           </div>
         </section>
       </div>

@@ -40,19 +40,15 @@
 }
 
 .game-image {
-  position: relative;
   width: 350px;
-  aspect-ratio: 3 / 4;
   flex: 0 0 auto;
 }
 
 .game-image__card {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
   box-sizing: border-box;
-  object-fit: cover;
   border: 1px solid #aaa;
   background: #111;
 }
@@ -64,10 +60,11 @@
   gap: 16px;
 }
 
-.game-gallery__controls {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.game-image__placeholder {
+  display: grid;
+  place-items: center;
+  color: #aaa;
+  min-height: 466px;
 }
 
 .game-page__facts {
@@ -105,6 +102,7 @@
 .game-page__about p {
   line-height: 1.6;
   font-size: 0.9rem;
+  white-space: pre-line;
 }
 
 .game-ratings {

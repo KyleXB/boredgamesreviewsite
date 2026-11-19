@@ -1,14 +1,82 @@
 // IGameService - Application logic for games, search, and category counts
 const gameRepository = require('../repositories/gameRepository')
 
-function decodeHtml(str) {
-  if (!str) return ''
-  return str
-    .replace(/&#039;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+const htmlEntities = {
+  '&amp;': '&',
+  '&quot;': '"',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&rsquo;': '’',
+  '&lsquo;': '‘',
+  '&ldquo;': '“',
+  '&rdquo;': '”',
+  '&mdash;': '—',
+  '&ndash;': '–',
+  '&bull;': '•',
+  '&eacute;': 'é',
+  '&Eacute;': 'É',
+  '&egrave;': 'è',
+  '&Egrave;': 'È',
+  '&uuml;': 'ü',
+  '&Uuml;': 'Ü',
+  '&auml;': 'ä',
+  '&Auml;': 'Ä',
+  '&ouml;': 'ö',
+  '&Ouml;': 'Ö',
+  '&agrave;': 'à',
+  '&aacute;': 'á',
+  '&oacute;': 'ó',
+  '&iuml;': 'ï',
+  '&ucirc;': 'û',
+  '&uacute;': 'ú',
+  '&iacute;': 'í',
+  '&ograve;': 'ò',
+  '&ntilde;': 'ñ',
+  '&acirc;': 'â',
+  '&icirc;': 'î',
+  '&ccedil;': 'ç',
+  '&szlig;': 'ß',
+  '&times;': '×',
+  '&hellip;': '…',
+  '&trade;': '™',
+  '&frac12;': '½',
+  '&nbsp;': ' ',
+  '&ordm;': 'º',
+  '&acute;': '´',
+  '&reg;': '®',
+  '&pound;': '£',
+  '&shy;': '\u00ad',
+  '&copy;': '©',
+  '&dagger;': '†',
+  '&plusmn;': '±',
+}
+
+function decodeHtml(value) {
+  if (!value) return ''
+
+  let decoded = String(value)
+
+  // Repeat so double-escaped values like &amp;mdash; are decoded too.
+  for (let pass = 0; pass < 2; pass += 1) {
+    decoded = decoded.replace(
+      /&#(x[0-9a-f]+|\d+);|&[a-z][a-z0-9]+;/gi,
+      (entity, code) => {
+        if (code) {
+          const number = code[0].toLowerCase() === 'x'
+            ? parseInt(code.slice(1), 16)
+            : Number(code)
+
+          return Number.isFinite(number)
+            ? String.fromCodePoint(number)
+            : entity
+        }
+
+        return htmlEntities[entity] ?? entity
+      }
+    )
+  }
+
+  return decoded
 }
 
 const gameService = {
@@ -25,7 +93,16 @@ const gameService = {
       error.status = 404
       throw error
     }
-    return game
+    return {
+      ...game,
+      title: decodeHtml(game.title),
+      description: decodeHtml(game.description),
+      publisher: decodeHtml(game.publisher),
+      expansions: game.expansions.map((expansion) => ({
+        ...expansion,
+        title: decodeHtml(expansion.title),
+      })),
+    }
   },
 
   // Search games by keyword
