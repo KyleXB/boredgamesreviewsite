@@ -3,6 +3,16 @@ const express = require('express')
 const router = express.Router()
 const gameService = require('../services/gameService')
 
+// GET /api/games/popular - Popular games for homepage sidebar
+router.get('/popular', async (req, res) => {
+  try {
+    const popular = await gameService.getPopularGames(10)
+    res.json(popular)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // GET /api/games/categories - Category counts for landing page
 router.get('/categories', async (req, res) => {
   try {
