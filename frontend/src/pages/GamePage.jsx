@@ -4,12 +4,6 @@ import './GamePage.css'
 
 const API_BASE_URL = 'http://localhost:3001/api'
 
-const images = [
-  '/placeholder3.jpg',
-  '/placeholder2.jpg',
-  '/placeholder.jpg',
-]
-
 const hasReviewed = false // placeholder until review data exists
 
 function formatRange(min, max, unit) {
