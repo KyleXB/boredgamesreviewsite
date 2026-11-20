@@ -149,6 +149,31 @@ export default function GamePage() {
           </p>
         </section>
 
+        <section className="game-page__tags" aria-label="Game categories and tags">
+          {[
+            { label: 'Categories', category: 'genres', items: game.genres },
+            { label: 'Mechanics', category: 'mechanics', items: game.mechanics },
+          ]
+            .filter(({ items }) => items?.length)
+            .map(({ label, category, items }) => (
+              <div className="game-page__tag-group" key={label}>
+                <span className="game-page__tag-label">{label}</span>
+
+                <div className="game-page__tag-list">
+                  {items.map((item) => (
+                    <Link
+                      className="game-page__tag"
+                      key={item.id}
+                      to={`/search?category=${category}&q=${encodeURIComponent(item.name)}`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+        </section>
+
         <section className="game-page__expansions">
           <h2>Expansions</h2>
 

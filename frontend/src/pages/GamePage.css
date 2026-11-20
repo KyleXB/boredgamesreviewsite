@@ -236,3 +236,44 @@
   font-size: 0.65rem;
   color: #aaa;
 }
+
+.game-page__tags {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.game-page__tag-group {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.game-page__tag-label {
+  min-width: 110px;
+  color: #aaa;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.game-page__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.game-page__tag {
+  padding: 4px 8px;
+  border: 1px solid #777;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.game-page__tag:hover {
+  border-color: currentColor;
+}

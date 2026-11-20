@@ -102,6 +102,14 @@ const gameService = {
         ...expansion,
         title: decodeHtml(expansion.title),
       })),
+      genres: game.genres.map((genre) => ({
+        ...genre,
+        name: decodeHtml(genre.name),
+      })),
+      mechanics: game.mechanics.map((mechanic) => ({
+        ...mechanic,
+        name: decodeHtml(mechanic.name),
+      })),
     }
   },
 
