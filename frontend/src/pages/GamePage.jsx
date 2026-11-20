@@ -99,10 +99,12 @@ export default function GamePage() {
 
       <div className="game-page__details">
         <div className="game-page__title-row">
-          <h1 className="game-page__title">{game.title}</h1>
+          <div className="game-page__heading">
+            <h1 className="game-page__title">{game.title}</h1>
             {game.yearPublished != null && (
               <span className="game-page__year">({game.yearPublished})</span>
             )}
+          </div>
 
           <div className="game-page__global-rating">
             <span className="game-page__global-label">Global rating</span>

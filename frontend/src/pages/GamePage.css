@@ -24,12 +24,14 @@
 }
 
 .game-page__title {
-  font-size: 4rem;
-  text-transform: capitalize;
+  min-width: 0;
+  font-size: 3rem;
+  line-height: 1.1;
 }
 
 .game-page__title-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 12px;
 }
@@ -37,6 +39,20 @@
 .game-page__year {
   font-size: 1.6rem;
   color: #c8c8c88e;
+  white-space: nowrap;
+}
+
+.game-page__year,
+.game-page__global-rating {
+  flex: 0 0 auto;
+}
+
+.game-page__heading {
+  display: flex;
+  flex: 1 1 500px;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
 }
 
 .game-image {
