@@ -1,13 +1,24 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router'
 import './Header.css'
+
+const CATEGORY_VALUES = ['all', 'board-games', 'expansions', 'publishers', 'genres', 'mechanics', 'themes', 'users']
 
 export default function Header() {
   const [category, setCategory] = useState('all')
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
-  const { user, logout, isAuthenticated } = useAuth()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+
+  // On the search page, show the current search in the bar
+  // (e.g. after following a link from the home page, or pressing Back)
+  useEffect(() => {
+    if (location.pathname !== '/search') return
+    const urlCategory = searchParams.get('category')
+    setCategory(CATEGORY_VALUES.includes(urlCategory) ? urlCategory : 'all')
+    setQuery(searchParams.get('q') ?? '')
+  }, [location.pathname, searchParams])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -55,26 +66,12 @@ export default function Header() {
 
       {/* Right Auth Links */}
       <div className="header-auth">
-        {isAuthenticated ? (
-          <div className="user-profile-menu">
-            <span className="username-badge">{user.username}</span>
-            {user.role && user.role !== 'USER' && (
-              <span className="role-tag">{user.role}</span>
-            )}
-            <button type="button" className="auth-btn auth-logout" onClick={logout}>
-              Log out
-            </button>
-          </div>
-        ) : (
-          <>
-            <Link to="/register" className="auth-btn auth-register">
-              Register
-            </Link>
-            <Link to="/login" className="auth-btn auth-login">
-              Login
-            </Link>
-          </>
-        )}
+        <Link to="/register" className="auth-btn auth-register">
+          Register
+        </Link>
+        <Link to="/login" className="auth-btn auth-login">
+          Login
+        </Link>
       </div>
     </header>
   )

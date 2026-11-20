@@ -1,68 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../context/AuthContext'
+import { SortOrderIcon, StarRating } from './SharedComponents'
 import './HomePage.css'
 
 const API_BASE_URL = 'http://localhost:3001/api'
 
-// Sort Icon Component matching the user's reference mockup
-// Shows bars with directional arrow: Down arrow for A-Z, Up arrow for Z-A
-function SortOrderIcon({ direction }) {
-  return (
-    <svg 
-      className="sort-icon-svg" 
-      width="18" 
-      height="18" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2.2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="3" y1="5" x2="14" y2="5" />
-      <line x1="3" y1="10" x2="11" y2="10" />
-      <line x1="3" y1="15" x2="8" y2="15" />
-      <line x1="3" y1="20" x2="5" y2="20" />
-
-      {direction === 'asc' ? (
-        <>
-          <line x1="19" y1="5" x2="19" y2="19" />
-          <polyline points="15 15 19 19 23 15" />
-        </>
-      ) : (
-        <>
-          <line x1="19" y1="19" x2="19" y2="5" />
-          <polyline points="15 9 19 5 23 9" />
-        </>
-      )}
-    </svg>
-  )
-}
-
-// 5-Star Rating Component for Popular list
-function StarRating({ rating }) {
-  const numRating = parseFloat(rating) || 0
-  return (
-    <div className="star-row" title={`Rated ${numRating.toFixed(1)} out of 5 stars`}>
-      {[1, 2, 3, 4, 5].map((starIndex) => {
-        const fillPercent = Math.max(0, Math.min(100, (numRating - (starIndex - 1)) * 100))
-        return (
-          <span key={starIndex} className="star-wrapper">
-            <span className="star-empty">★</span>
-            <span 
-              className="star-filled" 
-              style={{ width: `${fillPercent}%` }}
-            >
-              ★
-            </span>
-          </span>
-        )
-      })}
-    </div>
-  )
-}
+// Builds a link to the search page with one exact sidebar filter switched on,
+// e.g. searchFilterUrl('genre', 'Strategy') -> /search?genre=Strategy
+// (SearchPage reads genre / mechanic / theme from the URL and highlights the filter)
+const searchFilterUrl = (param, value) => `/search?${param}=${encodeURIComponent(value)}`
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth()
@@ -215,11 +162,11 @@ export default function HomePage() {
                   <Link 
                     to={`/game/${game.id}#reviews`} 
                     className="popular-rating-bubble" 
-                    title={`View reviews for ${game.title} (${parseFloat(game.rating).toFixed(1)} stars)`}
+                    title={`View reviews for ${game.title} (${(parseFloat(game.rating) || 0).toFixed(1)} stars)`}
                     aria-label={`View reviews for ${game.title}`}
                   >
                     <StarRating rating={game.rating} />
-                    <span className="rating-score-text">{parseFloat(game.rating).toFixed(1)}</span>
+                    <span className="rating-score-text">{(parseFloat(game.rating) || 0).toFixed(1)}</span>
                   </Link>
                 </div>
               )
@@ -323,10 +270,10 @@ export default function HomePage() {
                 <ul>
                   {sortedGenres.map(item => (
                     <li key={item.name}>
-                      <span className="cat-item-row">
+                      <Link to={searchFilterUrl('genre', item.name)}>
                         <span className="cat-name">{item.name}</span>
                         <span className="cat-count">({item.count})</span>
-                      </span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -351,10 +298,10 @@ export default function HomePage() {
                 <ul>
                   {sortedMechanics.map(item => (
                     <li key={item.name}>
-                      <span className="cat-item-row">
+                      <Link to={searchFilterUrl('mechanic', item.name)}>
                         <span className="cat-name">{item.name}</span>
                         <span className="cat-count">({item.count})</span>
-                      </span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -379,10 +326,10 @@ export default function HomePage() {
                 <ul>
                   {sortedThemes.map(item => (
                     <li key={item.name}>
-                      <span className="cat-item-row">
+                      <Link to={searchFilterUrl('theme', item.name)}>
                         <span className="cat-name">{item.name}</span>
                         <span className="cat-count">({item.count})</span>
-                      </span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
