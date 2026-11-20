@@ -1,0 +1,98 @@
+/* Extra styles for SearchPage.
+   Most of the page reuses classes from HomePage.css. These rules only cover
+   the new pieces, and take their colours from the surrounding text
+   (currentColor) so they match whatever palette HomePage.css uses. */
+
+/* Filter blocks stacked in the sidebar */
+.search-sidebar .search-filter-block {
+  margin-top: 16px;
+}
+
+.search-sidebar .category-scrollable-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.search-filter-active {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Active filter chip */
+.search-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.search-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-chip-remove {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.search-chip-remove:hover {
+  opacity: 1;
+}
+
+/* Results header with count and sort controls */
+.search-results {
+  margin-top: 0;
+}
+
+.search-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.search-sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-sort-label {
+  opacity: 0.7;
+  margin-right: 4px;
+}
+
+.search-sort-option {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.search-sort-option:hover {
+  border-color: currentColor;
+}
+
+.search-sort-option.active {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  font-weight: 700;
+}
+
+/* Year · players line under each title */
+.search-meta {
+  display: block;
+  font-size: 0.85em;
+  opacity: 0.7;
+  margin-top: 2px;
+}

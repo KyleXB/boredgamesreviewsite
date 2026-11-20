@@ -6,6 +6,7 @@ import GamePage from './pages/GamePage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import SearchPage from './pages/SearchPage'
 import './App.css'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<SignupPage />} />
           <Route path="/forgot" element={<ForgotPasswordPage />} />
+          <Route path="/search" element={<SearchPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
