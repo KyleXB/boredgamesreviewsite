@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 import { SortOrderIcon, StarRating } from './SharedComponents'
@@ -12,13 +12,24 @@ const API_BASE_URL = 'http://localhost:3001/api'
 const searchFilterUrl = (param, value) => `/search?${param}=${encodeURIComponent(value)}`
 
 export default function HomePage() {
-  // Mock login state for testing recommendation section (§2 requirement)
-  const [isLoggedIn, setIsLoggedIn] = useState(true)
+  const { isAuthenticated } = useAuth()
+
+  // Dev toggle to preview logged-in vs logged-out view (default reflects real auth)
+  const [overrideAuth, setOverrideAuth] = useState(null)
+  const userLoggedIn = overrideAuth !== null ? overrideAuth : isAuthenticated
 
   // Independent alphabetical sorting state for each category (starting at 'asc' = A-Z)
   const [genreSort, setGenreSort] = useState('asc')
   const [mechanicSort, setMechanicSort] = useState('asc')
   const [themeSort, setThemeSort] = useState('asc')
+
+  // Live state from backend database
+  const [popularGames, setPopularGames] = useState([])
+  const [recommendedGames, setRecommendedGames] = useState([])
+  const [rawGenres, setRawGenres] = useState([])
+  const [rawMechanics, setRawMechanics] = useState([])
+  const [rawThemes, setRawThemes] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const carouselRef = useRef(null)
 
@@ -32,148 +43,78 @@ export default function HomePage() {
     }
   }
 
-  // Sample games for Popular This Week with 1-decimal ratings
-  const popularGames = [
-    { id: 'catan', title: 'Catan', tags: ['Strategy', 'Trading'], rating: '4.2' },
-    { id: 'pandemic', title: 'Pandemic', tags: ['Co-op', 'Strategy'], rating: '4.5' },
-    { id: 'ticket-to-ride', title: 'Ticket to Ride', tags: ['Family', 'Trains'], rating: '4.3' },
-    { id: 'wingspan', title: 'Wingspan', rating: '4.7' },
-    { id: 'terraforming-mars', title: 'Terraforming Mars', rating: '4.8' },
-    { id: '7-wonders', title: '7 Wonders', rating: '4.4' },
-    { id: 'azul', title: 'Azul', rating: '4.6' },
-    { id: 'carcassonne', title: 'Carcassonne', rating: '4.2' },
-    { id: 'scythe', title: 'Scythe', rating: '4.5' },
-    { id: 'dune-imperium', title: 'Dune: Imperium', rating: '4.8' }
-  ]
+  // Fetch live games, categories, and recommendations from backend
+  useEffect(() => {
+    async function fetchHomeData() {
+      try {
+        const [popRes, recRes, catRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/games/popular`),
+          fetch(`${API_BASE_URL}/recommendations`),
+          fetch(`${API_BASE_URL}/games/categories`)
+        ])
 
-  // Mock recommendations data (star ratings removed as requested)
-  const recommendedGames = [
-    {
-      id: 'wingspan',
-      title: 'Wingspan',
-      year: '2019',
-      image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 'scythe',
-      title: 'Scythe',
-      year: '2016',
-      image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 'terraforming-mars',
-      title: 'Terraforming Mars',
-      year: '2016',
-      image: 'https://images.unsplash.com/photo-1563941402622-4e7a488bcc57?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 'dune-imperium',
-      title: 'Dune: Imperium',
-      year: '2020',
-      image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 'azul',
-      title: 'Azul',
-      year: '2017',
-      image: 'https://images.unsplash.com/photo-1585504198199-20277593b94f?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 'everdell',
-      title: 'Everdell',
-      year: '2018',
-      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 'root',
-      title: 'Root',
-      year: '2018',
-      image: 'https://images.unsplash.com/photo-1578374173705-969cbe6f2d6b?auto=format&fit=crop&w=400&q=80'
+        if (popRes.ok) {
+          const popData = await popRes.json()
+          setPopularGames(popData)
+        }
+
+        if (recRes.ok) {
+          const recData = await recRes.json()
+          setRecommendedGames(recData)
+        }
+
+        if (catRes.ok) {
+          const catData = await catRes.json()
+          setRawGenres(catData.genres || [])
+          setRawMechanics(catData.mechanics || [])
+          setRawThemes(catData.themes || [])
+        }
+      } catch (err) {
+        console.warn('Could not load live backend data:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  // Raw data for categories
-  const rawGenres = [
-    { name: 'Strategy', count: 48 },
-    { name: 'Family', count: 35 },
-    { name: 'Cooperative', count: 24 },
-    { name: 'Card Game', count: 41 },
-    { name: 'Party', count: 19 },
-    { name: 'Wargame', count: 14 },
-    { name: 'Abstract', count: 22 },
-    { name: 'Drafting', count: 28 },
-    { name: 'Deck-Building', count: 31 },
-    { name: 'Worker Placement', count: 27 },
-    { name: 'Adventure', count: 18 },
-    { name: 'Deduction', count: 15 }
-  ]
-
-  const rawMechanics = [
-    { name: 'Hand Management', count: 42 },
-    { name: 'Set Collection', count: 37 },
-    { name: 'Dice Rolling', count: 29 },
-    { name: 'Variable Player Powers', count: 33 },
-    { name: 'Tile Placement', count: 21 },
-    { name: 'Area Majority / Influence', count: 19 },
-    { name: 'Auction / Bidding', count: 16 },
-    { name: 'Grid Movement', count: 25 },
-    { name: 'Trading', count: 18 },
-    { name: 'Resource Management', count: 34 },
-    { name: 'Push Your Luck', count: 12 },
-    { name: 'Simultaneous Action', count: 14 }
-  ]
-
-  const rawThemes = [
-    { name: 'Fantasy', count: 39 },
-    { name: 'Science Fiction', count: 34 },
-    { name: 'Medieval', count: 28 },
-    { name: 'Animals / Nature', count: 22 },
-    { name: 'Economy / Industry', count: 26 },
-    { name: 'Space Exploration', count: 21 },
-    { name: 'Horror', count: 13 },
-    { name: 'Civilization', count: 17 },
-    { name: 'Nautical / Pirates', count: 11 },
-    { name: 'Ancient History', count: 16 },
-    { name: 'Post-Apocalyptic', count: 9 },
-    { name: 'Mythology', count: 15 }
-  ]
+    fetchHomeData()
+  }, [])
 
   // Sorted items based on current sort direction (asc: A-Z, desc: Z-A)
   const sortedGenres = useMemo(() => {
-    return [...rawGenres].sort((a, b) => 
-      genreSort === 'asc' 
-        ? a.name.localeCompare(b.name) 
+    return [...rawGenres].sort((a, b) =>
+      genreSort === 'asc'
+        ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name)
     )
-  }, [genreSort])
+  }, [rawGenres, genreSort])
 
   const sortedMechanics = useMemo(() => {
-    return [...rawMechanics].sort((a, b) => 
-      mechanicSort === 'asc' 
-        ? a.name.localeCompare(b.name) 
+    return [...rawMechanics].sort((a, b) =>
+      mechanicSort === 'asc'
+        ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name)
     )
-  }, [mechanicSort])
+  }, [rawMechanics, mechanicSort])
 
   const sortedThemes = useMemo(() => {
-    return [...rawThemes].sort((a, b) => 
-      themeSort === 'asc' 
-        ? a.name.localeCompare(b.name) 
+    return [...rawThemes].sort((a, b) =>
+      themeSort === 'asc'
+        ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name)
     )
-  }, [themeSort])
+  }, [rawThemes, themeSort])
 
   return (
     <div className="home-container">
-      {/* Dev toggle to preview logged-in vs logged-out (§2 in wireframe) */}
+      {/* Dev toggle to preview logged-in vs logged-out view */}
       <div className="auth-status-bar">
-        <span>Preview Mode: <strong>{isLoggedIn ? 'Logged In' : 'Logged Out (Guest)'}</strong></span>
-        <button 
-          type="button" 
-          onClick={() => setIsLoggedIn(!isLoggedIn)}
+        <span>Preview Mode: <strong>{userLoggedIn ? 'Logged In View' : 'Guest View'}</strong></span>
+        <button
+          type="button"
+          onClick={() => setOverrideAuth(!userLoggedIn)}
           className="auth-toggle-btn"
         >
-          Switch to {isLoggedIn ? 'Guest View' : 'Logged In View'}
+          Switch to {userLoggedIn ? 'Guest View' : 'Logged In View'}
         </button>
       </div>
 
@@ -185,37 +126,51 @@ export default function HomePage() {
           </div>
 
           <div className="popular-list">
-            {popularGames.map((game, index) => (
-              <div key={game.id} className="popular-item-card">
-                {/* Whole block click navigates to game page */}
-                <Link to={`/game/${game.id}`} className="popular-main-link" aria-label={`View ${game.title} game page`}>
-                  <div className="popular-main-info">
-                    <span className="popular-name">
-                      <span className="popular-rank">#{index + 1}</span> {game.title}
-                    </span>
+            {popularGames.map((game, index) => {
+              const splashStyle = game.image
+                ? {
+                    backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.90) 0%, rgba(26, 34, 52, 0.72) 100%), url("${game.image}")`
+                  }
+                : {}
 
-                    {game.tags && (
-                      <div className="popular-tags">
-                        {game.tags.map(tag => (
-                          <span key={tag} className="tag-badge">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Link>
+              return (
+                <div key={game.id} className="popular-item-card">
+                  {/* Whole block click navigates to game page with splash background */}
+                  <Link
+                    to={`/game/${game.id}`}
+                    className="popular-main-link"
+                    style={splashStyle}
+                    aria-label={`View ${game.title} game page`}
+                  >
+                    <div className="popular-main-info">
+                      <span className="popular-name">
+                        <span className="popular-rank">#{index + 1}</span> {game.title}
+                      </span>
 
-                {/* Distinct review bubble clickable to the game's reviews */}
-                <Link 
-                  to={`/game/${game.id}#reviews`} 
-                  className="popular-rating-bubble" 
-                  title={`View reviews for ${game.title} (${(parseFloat(game.rating) || 0).toFixed(1)} stars)`}
-                  aria-label={`View reviews for ${game.title}`}
-                >
-                  <StarRating rating={game.rating} />
-                  <span className="rating-score-text">{(parseFloat(game.rating) || 0).toFixed(1)}</span>
-                </Link>
-              </div>
-            ))}
+                      {/* Display two biggest tags for top 3 games */}
+                      {index < 3 && game.tags && game.tags.length > 0 && (
+                        <div className="popular-tags">
+                          {game.tags.slice(0, 2).map(tag => (
+                            <span key={tag} className="tag-badge">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+
+                  {/* Distinct review bubble clickable to the game's reviews (keeps original color) */}
+                  <Link
+                    to={`/game/${game.id}#reviews`}
+                    className="popular-rating-bubble"
+                    title={`View reviews for ${game.title} (${(parseFloat(game.rating) || 0).toFixed(1)} stars)`}
+                    aria-label={`View reviews for ${game.title}`}
+                  >
+                    <StarRating rating={game.rating} />
+                    <span className="rating-score-text">{(parseFloat(game.rating) || 0).toFixed(1)}</span>
+                  </Link>
+                </div>
+              )
+            })}
           </div>
         </aside>
 
@@ -226,23 +181,23 @@ export default function HomePage() {
             <div className="section-header rec-header">
               <div className="header-title-with-info">
                 <h2>Your Board Game Recommendations</h2>
-                <span 
-                  className="info-bubble" 
+                <span
+                  className="info-bubble"
                   title="Personalized recommendations based on games you have played, rated, or added to your collection."
                 >
                   ?
                 </span>
               </div>
-              {isLoggedIn && (
+              {userLoggedIn && (
                 <span className="rec-subtitle">Curated from your play history and preferred mechanics</span>
               )}
             </div>
 
-            {isLoggedIn ? (
+            {userLoggedIn ? (
               <div className="carousel-wrapper">
-                <button 
-                  type="button" 
-                  className="carousel-btn left-arrow" 
+                <button
+                  type="button"
+                  className="carousel-btn left-arrow"
                   onClick={() => scrollRecommendations('left')}
                   aria-label="Previous recommendations"
                 >
@@ -253,19 +208,26 @@ export default function HomePage() {
                   {recommendedGames.map((game) => (
                     <Link to={`/game/${game.id}`} key={game.id} className="rec-card">
                       <div className="rec-image-box">
-                        <img src={game.image} alt={game.title} loading="lazy" />
+                        <img
+                          src={game.image}
+                          alt={game.title}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                          }}
+                        />
                       </div>
                       <div className="rec-info">
                         <h3 className="rec-title">{game.title}</h3>
-                        <span className="rec-year">{game.year}</span>
+                        {game.year && <span className="rec-year">{game.year}</span>}
                       </div>
                     </Link>
                   ))}
                 </div>
 
-                <button 
-                  type="button" 
-                  className="carousel-btn right-arrow" 
+                <button
+                  type="button"
+                  className="carousel-btn right-arrow"
                   onClick={() => scrollRecommendations('right')}
                   aria-label="Next recommendations"
                 >
@@ -273,7 +235,7 @@ export default function HomePage() {
                 </button>
               </div>
             ) : (
-              /* §2 Requirement: Not logged in placeholder */
+              /* Not logged in placeholder */
               <div className="logged-out-rec-placeholder">
                 <div className="placeholder-icon">🎲</div>
                 <h3>Sign in for personalized recommendations</h3>
