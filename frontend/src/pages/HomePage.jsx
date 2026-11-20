@@ -1,7 +1,15 @@
 import { useState, useRef, useMemo } from 'react'
 import { Link } from 'react-router'
+import { useAuth } from '../context/AuthContext'
 import { SortOrderIcon, StarRating } from './SharedComponents'
 import './HomePage.css'
+
+const API_BASE_URL = 'http://localhost:3001/api'
+
+// Builds a link to the search page with one exact sidebar filter switched on,
+// e.g. searchFilterUrl('genre', 'Strategy') -> /search?genre=Strategy
+// (SearchPage reads genre / mechanic / theme from the URL and highlights the filter)
+const searchFilterUrl = (param, value) => `/search?${param}=${encodeURIComponent(value)}`
 
 export default function HomePage() {
   // Mock login state for testing recommendation section (§2 requirement)
@@ -200,11 +208,11 @@ export default function HomePage() {
                 <Link 
                   to={`/game/${game.id}#reviews`} 
                   className="popular-rating-bubble" 
-                  title={`View reviews for ${game.title} (${parseFloat(game.rating).toFixed(1)} stars)`}
+                  title={`View reviews for ${game.title} (${(parseFloat(game.rating) || 0).toFixed(1)} stars)`}
                   aria-label={`View reviews for ${game.title}`}
                 >
                   <StarRating rating={game.rating} />
-                  <span className="rating-score-text">{parseFloat(game.rating).toFixed(1)}</span>
+                  <span className="rating-score-text">{(parseFloat(game.rating) || 0).toFixed(1)}</span>
                 </Link>
               </div>
             ))}
@@ -300,7 +308,7 @@ export default function HomePage() {
                 <ul>
                   {sortedGenres.map(item => (
                     <li key={item.name}>
-                      <Link to={`/search?category=genres&q=${encodeURIComponent(item.name)}`}>
+                      <Link to={searchFilterUrl('genre', item.name)}>
                         <span className="cat-name">{item.name}</span>
                         <span className="cat-count">({item.count})</span>
                       </Link>
@@ -328,7 +336,7 @@ export default function HomePage() {
                 <ul>
                   {sortedMechanics.map(item => (
                     <li key={item.name}>
-                      <Link to={`/search?category=mechanics&q=${encodeURIComponent(item.name)}`}>
+                      <Link to={searchFilterUrl('mechanic', item.name)}>
                         <span className="cat-name">{item.name}</span>
                         <span className="cat-count">({item.count})</span>
                       </Link>
@@ -356,7 +364,7 @@ export default function HomePage() {
                 <ul>
                   {sortedThemes.map(item => (
                     <li key={item.name}>
-                      <Link to={`/search?category=themes&q=${encodeURIComponent(item.name)}`}>
+                      <Link to={searchFilterUrl('theme', item.name)}>
                         <span className="cat-name">{item.name}</span>
                         <span className="cat-count">({item.count})</span>
                       </Link>
