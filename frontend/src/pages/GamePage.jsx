@@ -19,6 +19,16 @@ export default function GamePage() {
   const [game, setGame] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [hoveredRating, setHoveredRating] = useState(0)
+  const [reviewText, setReviewText] = useState('')
+
+  const getRatingAtPointer = (event, star) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return event.clientX < rect.left + rect.width / 2 ? star - 0.5 : star
+  }
+  const displayedRating = hoveredRating || reviewRating
 
   useEffect(() => {
     async function loadGame() {
@@ -29,13 +39,11 @@ export default function GamePage() {
         const response = await fetch(
           `${API_BASE_URL}/games/${encodeURIComponent(gameId)}`
         )
-
         if (!response.ok) {
           throw new Error(
             response.status === 404 ? 'Game not found.' : 'Could not load game.'
           )
         }
-
         setGame(await response.json())
       } catch (err) {
         setError(err.message)
@@ -46,15 +54,6 @@ export default function GamePage() {
 
     loadGame()
   }, [gameId])
-  const [imageIndex, setImageIndex] = useState(0)
-
-  const showPrevious = () => {
-    setImageIndex((current) => (current - 1 + images.length) % images.length)
-  }
-
-  const showNext = () => {
-    setImageIndex((current) => (current + 1) % images.length)
-  }
 
   if (loading) return <main className="game-page">Loading game…</main>
   if (error) return <main className="game-page">{error}</main>
@@ -91,7 +90,7 @@ export default function GamePage() {
             </div>
           </div>
 
-          <button type="button" className="game-page__review-button">
+          <button type="button" className="game-page__review-button" onClick={() => setIsReviewOpen(true)}>
             {hasReviewed ? 'Edit your review' : 'Write a review'}
           </button>
       </div>
@@ -194,6 +193,113 @@ export default function GamePage() {
           </div>
         </section>
       </div>
+
+
+
+
+
+      {isReviewOpen && (
+        <div
+          className="review-modal-backdrop"
+          onClick={() => setIsReviewOpen(false)}
+        >
+          <section
+            className="review-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="review-modal__close"
+              aria-label="Close review window"
+              onClick={() => setIsReviewOpen(false)}
+            >
+              ×
+            </button>
+
+            <div className="review-modal__game">
+              {game.image || game.thumbnail ? (
+                <img
+                  className="review-modal__game-image"
+                  src={game.image || game.thumbnail}
+                  alt={game.title}
+                />
+              ) : (
+                <div className="review-modal__image-placeholder">No image available</div>
+              )}
+
+              <h2 id="review-modal-title">{game.title}</h2>
+              <p>{game.publisher || 'Publisher not available'}</p>
+            </div>
+
+            <div className="review-modal__form">
+              <div className="review-modal__rating">
+                <span>Your rating</span>
+
+                <div
+                  className="review-modal__stars"
+                  role="group"
+                  aria-label="Choose a rating from one half to five stars"
+                  onMouseLeave={() => setHoveredRating(0)}
+                >
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const fillPercent = Math.max(
+                      0,
+                      Math.min(1, displayedRating - star + 1)
+                    ) * 100
+
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        className="review-modal__star"
+                        aria-label={`Rate ${star - 0.5} or ${star} stars`}
+                        onMouseMove={(event) =>
+                          setHoveredRating(getRatingAtPointer(event, star))
+                        }
+                        onClick={(event) => {
+                          // Keyboard activation selects the full star.
+                          const value =
+                            event.detail === 0 ? star : getRatingAtPointer(event, star)
+                          setReviewRating(value)
+                        }}
+                      >
+                        <span aria-hidden="true">★</span>
+                        <span
+                          className="review-modal__star-fill"
+                          aria-hidden="true"
+                          style={{ width: `${fillPercent}%` }}
+                        >
+                          ★
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <span className="review-modal__rating-value">
+                  {displayedRating ? `${displayedRating.toFixed(1)} / 5` : 'Not rated'}
+                </span>
+              </div>
+              <div className="review-modal__review">
+                <textarea
+                  id="review-text"
+                  rows="6"
+                  placeholder="Add a review..."
+                  value={reviewText}
+                  onChange={(event) => setReviewText(event.target.value)}
+                />
+              </div>
+
+              <button type="button" className="review-modal__save" onClick={() => setIsReviewOpen(false)}>
+                Save
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }
