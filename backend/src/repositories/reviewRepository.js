@@ -2,8 +2,34 @@
 const prisma = require('../prismaClient')
 
 const reviewRepository = {
-  // Methods to interact with Prisma review data
+  async gameExists(gameId) {
+    const game = await prisma.game.findUnique({
+      where: { id: gameId },
+      select: { id: true },
+    })
+
+    return Boolean(game)
+  },
+
+  async upsertForUserAndGame({ userId, gameId, rating, content }) {
+    return prisma.review.upsert({
+      where: {
+        userId_gameId: { userId, gameId },
+      },
+      create: {
+        rating,
+        content,
+        user: { connect: { id: userId } },
+        game: { connect: { id: gameId } },
+      },
+      update: { rating, content },
+      include: {
+        user: {
+          select: { id: true, username: true },
+        },
+      },
+    })
+  },
 }
 
 module.exports = reviewRepository
-
