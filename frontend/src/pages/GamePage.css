@@ -145,11 +145,6 @@
   gap: 8px;
 }
 
-.game-stars > span {
-  color: #f5c542;
-  letter-spacing: 2px;
-}
-
 .game-stars strong {
   font-size: 0.9rem;
 }
@@ -450,4 +445,31 @@
 
 .review-modal__save:hover {
   border-color: currentColor;
+}
+
+.rating-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.rating-stars__star {
+  position: relative;
+  display: inline-block;
+}
+
+.rating-stars__empty {
+  color: transparent;
+  -webkit-text-stroke: 1px #888;
+}
+
+.rating-stars__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  color: #f5c542;
+  white-space: nowrap;
+  pointer-events: none;
 }

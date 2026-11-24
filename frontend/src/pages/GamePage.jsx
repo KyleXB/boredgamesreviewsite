@@ -1,10 +1,9 @@
 import { Link, useParams } from 'react-router'
 import { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import './GamePage.css'
 
 const API_BASE_URL = 'http://localhost:3001/api'
-
-const hasReviewed = false // placeholder until review data exists
 
 function formatRange(min, max, unit) {
   if (min == null && max == null) return 'Not available'
@@ -12,6 +11,29 @@ function formatRange(min, max, unit) {
   if (max == null) return `${min}+ ${unit}`
   if (min === max) return `${min} ${unit}`
   return `${min}–${max} ${unit}`
+}
+
+function RatingStars({ rating, className = '' }) {
+  const value = Number(rating) || 0
+  return (
+    <span className={`rating-stars ${className}`} aria-hidden="true">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const fill = Math.max(0, Math.min(1, value - star + 1)) * 100
+
+        return (
+          <span className="rating-stars__star" key={star}>
+            <span className="rating-stars__empty">★</span>
+            <span
+              className="rating-stars__fill"
+              style={{ width: `${fill}%` }}
+            >
+              ★
+            </span>
+          </span>
+        )
+      })}
+    </span>
+  )
 }
 
 export default function GamePage() {
@@ -23,6 +45,18 @@ export default function GamePage() {
   const [reviewRating, setReviewRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [reviewText, setReviewText] = useState('')
+  const { user, token } = useAuth()
+  const [isSavingReview, setIsSavingReview] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const currentReview = game?.reviews?.find(
+    (review) => review.userId === user?.id
+  )
+  const hasReviewed = Boolean(currentReview)
+  const reviews = game?.reviews ?? []
+  const averageRating = reviews.length
+    ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
+    : null
+  const userRating = currentReview?.rating ?? 0
 
   const getRatingAtPointer = (event, star) => {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -59,6 +93,66 @@ export default function GamePage() {
   if (error) return <main className="game-page">{error}</main>
   if (!game) return null
 
+  function openReviewModal() {
+    setReviewRating(currentReview?.rating ?? 0)
+    setReviewText(currentReview?.content ?? '')
+    setHoveredRating(0)
+    setReviewError('')
+    setIsReviewOpen(true)
+  }
+
+  async function handleSaveReview() {
+    if (!token || !user) {
+      setReviewError('Please log in to save a review.')
+      return
+    }
+
+    if (!reviewRating) {
+      setReviewError('Please choose a star rating.')
+      return
+    }
+
+    setIsSavingReview(true)
+    setReviewError('')
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          gameId,
+          rating: reviewRating,
+          content: reviewText,
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not save your review.')
+      }
+
+      setGame((currentGame) => ({
+        ...currentGame,
+        reviews: [
+          ...(currentGame.reviews || []).filter(
+            (review) => review.userId !== user.id
+          ),
+          data.review,
+        ],
+      }))
+
+      setIsReviewOpen(false)
+    } catch (error) {
+      setReviewError(error.message)
+    } finally {
+      setIsSavingReview(false)
+    }
+  }
+
   return (
     <main className="game-page">
 
@@ -79,18 +173,24 @@ export default function GamePage() {
           </div>
         </div>
 
-          <div className="game-ratings">
-
-            <div>
-              <span>Your rating</span>
-              <div className="game-stars" aria-label="Your rating: not rated">
-                <span aria-hidden="true">☆☆☆☆☆</span>
-                <strong>—/5</strong>
+        <div className="game-ratings">
+          <div>
+            <span>Your rating</span>
+              <div
+                className="game-stars"
+                aria-label={
+                  userRating
+                    ? `Your rating: ${userRating} out of 5`
+                    : 'Your rating: not rated'
+                }
+              >
+                <RatingStars rating={userRating} />
+                <strong>{userRating ? `${userRating.toFixed(1)}/5` : '—/5'}</strong>
               </div>
             </div>
           </div>
 
-          <button type="button" className="game-page__review-button" onClick={() => setIsReviewOpen(true)}>
+          <button type="button" className="game-page__review-button" onClick={openReviewModal}>
             {hasReviewed ? 'Edit your review' : 'Write a review'}
           </button>
       </div>
@@ -109,11 +209,18 @@ export default function GamePage() {
             <span className="game-page__global-label">Global rating</span>
 
             <div className="game-page__global-rating-main">
-              <span className="game-page__global-stars" aria-hidden="true">★★★★☆</span>
-
+              <RatingStars
+                rating={averageRating ?? 0}
+                className="game-page__global-stars"
+              />
               <div className="game-page__global-rating-score">
-                <strong>4.3<small>/5</small></strong>
-                <span className="game-page__global-rating-count">1,234 ratings</span>
+                <strong>
+                  {averageRating == null ? '—' : averageRating.toFixed(1)}
+                  <small>/5</small>
+                </strong>
+                <span className="game-page__global-rating-count">
+                  {reviews.length} {reviews.length === 1 ? 'rating' : 'ratings'}
+                </span>
               </div>
             </div>
           </div>
@@ -293,8 +400,14 @@ export default function GamePage() {
                 />
               </div>
 
-              <button type="button" className="review-modal__save" onClick={() => setIsReviewOpen(false)}>
-                Save
+              {reviewError && <p role="alert">{reviewError}</p>}
+              <button
+                type="button"
+                className="review-modal__save"
+                onClick={handleSaveReview}
+                disabled={isSavingReview}
+              >
+                {isSavingReview ? 'Saving…' : 'Save'}
               </button>
             </div>
           </section>
