@@ -65,13 +65,16 @@ export default function GamePage() {
   const displayedRating = hoveredRating || reviewRating
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function loadGame() {
       setLoading(true)
       setError('')
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/games/${encodeURIComponent(gameId)}`
+          `${API_BASE_URL}/games/${encodeURIComponent(gameId)}`,
+          { signal: controller.signal }
         )
         if (!response.ok) {
           throw new Error(
@@ -80,13 +83,18 @@ export default function GamePage() {
         }
         setGame(await response.json())
       } catch (err) {
-        setError(err.message)
+        if (err.name !== 'AbortError') {
+          setError(err.message)
+        }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     loadGame()
+    return () => controller.abort()
   }, [gameId])
 
   if (loading) return <main className="game-page">Loading game…</main>
