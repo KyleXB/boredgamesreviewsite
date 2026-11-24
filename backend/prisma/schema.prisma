@@ -90,7 +90,7 @@ model User {
 
 model Review {
   id        String    @id @default(cuid())
-  rating    Int       // 1 - 5 stars
+  rating    Float       // 1.0 - 5.0, including half-stars
   content   String?
   
   userId    String
