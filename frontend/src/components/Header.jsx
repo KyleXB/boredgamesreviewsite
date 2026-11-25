@@ -22,7 +22,11 @@ export default function Header() {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    if (!query.trim()) return
+    // Blank search bar: show every game
+    if (!query.trim()) {
+      navigate('/search')
+      return
+    }
     // Navigate to search/browse page with query parameters
     navigate(`/search?category=${encodeURIComponent(category)}&q=${encodeURIComponent(query.trim())}`)
   }

@@ -1,79 +1,30 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { SortOrderIcon, StarRating } from './SharedComponents'
 import './HomePage.css'
 import './SearchPage.css'
 
+// Same backend as HomePage
+const API_BASE_URL = 'http://localhost:3001/api'
+
 // The search text comes from the site header (Header.jsx), which sends:
 //   /search?category=<scope>&q=<text>
 // where scope is one of the header dropdown values (all, board-games, genres, ...).
-// The sidebar adds exact filters on top:  &genre=...&mechanic=...&theme=...
+// The sidebar (and the home page's category links) add exact filters:
+//   &genre=...&mechanic=...&theme=...
 // Sorting:  &sort=name|rating&dir=asc|desc
 // Everything lives in the URL, so searches can be bookmarked and shared.
 
-// Mock game data – replace with data from your backend
-const GAMES = [
-  { id: 'catan', title: 'Catan', year: '1995', players: '3–4', rating: '4.2',
-    genres: ['Strategy', 'Family'], mechanics: ['Trading', 'Dice Rolling', 'Resource Management'], themes: ['Economy / Industry'] },
-  { id: 'pandemic', title: 'Pandemic', year: '2008', players: '2–4', rating: '4.5',
-    genres: ['Cooperative', 'Strategy'], mechanics: ['Hand Management', 'Set Collection', 'Variable Player Powers'], themes: [] },
-  { id: 'ticket-to-ride', title: 'Ticket to Ride', year: '2004', players: '2–5', rating: '4.3',
-    genres: ['Family'], mechanics: ['Set Collection', 'Hand Management'], themes: [] },
-  { id: 'wingspan', title: 'Wingspan', year: '2019', players: '1–5', rating: '4.7',
-    genres: ['Strategy', 'Card Game', 'Drafting'], mechanics: ['Hand Management', 'Set Collection', 'Dice Rolling'], themes: ['Animals / Nature'] },
-  { id: 'terraforming-mars', title: 'Terraforming Mars', year: '2016', players: '1–5', rating: '4.8',
-    genres: ['Strategy'], mechanics: ['Hand Management', 'Tile Placement', 'Variable Player Powers', 'Resource Management'], themes: ['Science Fiction', 'Space Exploration', 'Economy / Industry'] },
-  { id: '7-wonders', title: '7 Wonders', year: '2010', players: '2–7', rating: '4.4',
-    genres: ['Card Game', 'Drafting', 'Strategy'], mechanics: ['Set Collection', 'Simultaneous Action', 'Hand Management'], themes: ['Civilization', 'Ancient History'] },
-  { id: 'azul', title: 'Azul', year: '2017', players: '2–4', rating: '4.6',
-    genres: ['Abstract', 'Family', 'Drafting'], mechanics: ['Tile Placement', 'Set Collection'], themes: [] },
-  { id: 'carcassonne', title: 'Carcassonne', year: '2000', players: '2–5', rating: '4.2',
-    genres: ['Family', 'Strategy'], mechanics: ['Tile Placement', 'Area Majority / Influence'], themes: ['Medieval'] },
-  { id: 'scythe', title: 'Scythe', year: '2016', players: '1–5', rating: '4.5',
-    genres: ['Strategy', 'Wargame'], mechanics: ['Area Majority / Influence', 'Grid Movement', 'Variable Player Powers', 'Resource Management'], themes: ['Economy / Industry'] },
-  { id: 'dune-imperium', title: 'Dune: Imperium', year: '2020', players: '1–4', rating: '4.8',
-    genres: ['Strategy', 'Deck-Building', 'Worker Placement'], mechanics: ['Hand Management', 'Area Majority / Influence'], themes: ['Science Fiction'] },
-  { id: 'everdell', title: 'Everdell', year: '2018', players: '1–4', rating: '4.4',
-    genres: ['Strategy', 'Worker Placement'], mechanics: ['Hand Management', 'Resource Management', 'Set Collection'], themes: ['Fantasy', 'Animals / Nature'] },
-  { id: 'root', title: 'Root', year: '2018', players: '2–4', rating: '4.3',
-    genres: ['Strategy', 'Wargame'], mechanics: ['Variable Player Powers', 'Area Majority / Influence', 'Dice Rolling'], themes: ['Fantasy', 'Animals / Nature'] },
-  { id: 'codenames', title: 'Codenames', year: '2015', players: '2–8', rating: '4.1',
-    genres: ['Party', 'Deduction'], mechanics: [], themes: [] },
-  { id: 'gloomhaven', title: 'Gloomhaven', year: '2017', players: '1–4', rating: '4.7',
-    genres: ['Adventure', 'Cooperative'], mechanics: ['Hand Management', 'Grid Movement', 'Variable Player Powers'], themes: ['Fantasy'] },
-  { id: 'dominion', title: 'Dominion', year: '2008', players: '2–4', rating: '4.0',
-    genres: ['Card Game', 'Deck-Building'], mechanics: ['Hand Management'], themes: ['Medieval'] },
-  { id: 'arkham-horror', title: 'Arkham Horror', year: '2005', players: '1–8', rating: '4.0',
-    genres: ['Adventure', 'Cooperative'], mechanics: ['Dice Rolling', 'Variable Player Powers'], themes: ['Horror'] },
-  { id: 'libertalia', title: 'Libertalia', year: '2012', players: '2–6', rating: '4.0',
-    genres: ['Card Game'], mechanics: ['Simultaneous Action', 'Hand Management'], themes: ['Nautical / Pirates'] },
-  { id: 'quacks', title: 'The Quacks of Quedlinburg', year: '2018', players: '2–4', rating: '4.3',
-    genres: ['Family'], mechanics: ['Push Your Luck'], themes: ['Medieval'] },
-  { id: 'santorini', title: 'Santorini', year: '2016', players: '2–4', rating: '4.2',
-    genres: ['Abstract'], mechanics: ['Grid Movement', 'Variable Player Powers'], themes: ['Mythology', 'Ancient History'] }
-]
-
-// Same category names as the home page, so its links land on a matching filter
 const CATEGORIES = {
-  genres: {
-    title: 'Genres', label: 'Genre', param: 'genre',
-    names: ['Strategy', 'Family', 'Cooperative', 'Card Game', 'Party', 'Wargame', 'Abstract', 'Drafting', 'Deck-Building', 'Worker Placement', 'Adventure', 'Deduction']
-  },
-  mechanics: {
-    title: 'Mechanics', label: 'Mechanic', param: 'mechanic',
-    names: ['Hand Management', 'Set Collection', 'Dice Rolling', 'Variable Player Powers', 'Tile Placement', 'Area Majority / Influence', 'Auction / Bidding', 'Grid Movement', 'Trading', 'Resource Management', 'Push Your Luck', 'Simultaneous Action']
-  },
-  themes: {
-    title: 'Themes', label: 'Theme', param: 'theme',
-    names: ['Fantasy', 'Science Fiction', 'Medieval', 'Animals / Nature', 'Economy / Industry', 'Space Exploration', 'Horror', 'Civilization', 'Nautical / Pirates', 'Ancient History', 'Post-Apocalyptic', 'Mythology']
-  }
+  genres:    { title: 'Genres',    label: 'Genre',    param: 'genre' },
+  mechanics: { title: 'Mechanics', label: 'Mechanic', param: 'mechanic' },
+  themes:    { title: 'Themes',    label: 'Theme',    param: 'theme' }
 }
-
 
 // Header dropdown scopes: which part of a game the search text is matched against.
 // Scopes without data yet (expansions, publishers, users) show a message instead.
 const SCOPES = {
-  'all':         { label: 'All',         fields: (g) => [g.title, ...g.genres, ...g.mechanics, ...g.themes] },
+  'all':         { label: 'All',         fields: (g) => [g.title, ...g.tags, ...g.genres, ...g.mechanics, ...g.themes] },
   'board-games': { label: 'Board Games', fields: (g) => [g.title] },
   'genres':      { label: 'Genres',      fields: (g) => g.genres },
   'mechanics':   { label: 'Mechanics',   fields: (g) => g.mechanics },
@@ -83,7 +34,94 @@ const SCOPES = {
   'users':       { label: 'Users',       unsupported: true }
 }
 
-// Build a /search URL from the current params with some values changed (null removes one)
+// Accepts ['Strategy', ...] or [{ name: 'Strategy' }, ...]
+const toNameList = (value) =>
+  Array.isArray(value)
+    ? value.map(v => (typeof v === 'string' ? v : v?.name)).filter(Boolean)
+    : []
+
+// Turn a game from the API into the shape this page uses,
+// so missing fields don't break filtering or rendering
+function normalizeGame(game) {
+  const minP = game.minPlayers ?? game.min_players
+  const maxP = game.maxPlayers ?? game.max_players
+  return {
+    id: game.id,
+    title: game.title ?? game.name ?? '',
+    year: game.year ?? game.yearPublished ?? game.year_published ?? null,
+    players: game.players ?? (minP && maxP ? (minP === maxP ? `${minP}` : `${minP}–${maxP}`) : null),
+    rating: parseFloat(game.rating) || 0,
+    image: game.image ?? null,
+    tags: toNameList(game.tags),
+    genres: toNameList(game.genres),
+    mechanics: toNameList(game.mechanics),
+    themes: toNameList(game.themes)
+  }
+}
+
+// ---- Loading every game, not just the first page ----
+// The backend sends games in pages (e.g. 50 at a time). This keeps asking for the
+// next page until no new games come back. It sends the common paging parameter names
+// (page/limit, offset/limit, skip/take, per_page, pageSize) so it works with most
+// backends without knowing which one this server uses.
+const PAGE_SIZE = 100
+const MAX_PAGES = 500 // safety stop
+
+// Pull the list of games and any paging info out of a response
+function readPage(data) {
+  if (Array.isArray(data)) return { list: data, meta: {} }
+  const list = data?.games ?? data?.data ?? data?.items ?? data?.results ?? data?.rows ?? []
+  const meta = data?.pagination ?? data?.meta ?? data ?? {}
+  return {
+    list: Array.isArray(list) ? list : [],
+    meta: {
+      total: meta.total ?? meta.totalCount ?? meta.total_count ?? meta.count,
+      totalPages: meta.totalPages ?? meta.total_pages ?? meta.pages ?? meta.lastPage ?? meta.last_page,
+      hasMore: meta.hasMore ?? meta.has_more ?? meta.hasNextPage
+    }
+  }
+}
+
+// Returns true if the endpoint answered, false if it didn't exist / failed on the first page
+async function fetchAllPages(path, onPage, isCancelled) {
+  const all = []
+  const seenIds = new Set()
+
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    if (isCancelled()) return true
+
+    const offset = all.length
+    const params = new URLSearchParams({
+      page, limit: PAGE_SIZE, offset,
+      skip: offset, take: PAGE_SIZE,
+      per_page: PAGE_SIZE, pageSize: PAGE_SIZE
+    })
+    const res = await fetch(`${API_BASE_URL}${path}?${params}`)
+    if (!res.ok) return page > 1 // a later page failing still keeps what we have
+
+    const { list, meta } = readPage(await res.json())
+
+    // Only keep games we haven't seen; if the server ignores paging it
+    // returns the same games again, and we stop.
+    const fresh = list.filter(g => {
+      const key = g.id ?? g.title ?? g.name
+      if (seenIds.has(key)) return false
+      seenIds.add(key)
+      return true
+    })
+    if (fresh.length === 0) break
+
+    all.push(...fresh)
+    onPage([...all])
+
+    if (meta.hasMore === false) break
+    if (meta.total != null && all.length >= Number(meta.total)) break
+    if (meta.totalPages != null && page >= Number(meta.totalPages)) break
+  }
+  return true
+}
+
+// Build a params object from the current params with some values changed (null removes one)
 function withParams(searchParams, changes) {
   const params = new URLSearchParams(searchParams)
   Object.entries(changes).forEach(([key, value]) =>
@@ -93,15 +131,15 @@ function withParams(searchParams, changes) {
 }
 
 // One filter column in the sidebar, with its own A–Z / Z–A toggle (like the home page)
-function FilterBlock({ categoryKey, activeValue, buildUrl }) {
+function FilterBlock({ categoryKey, items, activeValue, buildUrl }) {
   const [sortDir, setSortDir] = useState('asc')
-  const { title, names, param } = CATEGORIES[categoryKey]
+  const { title, param } = CATEGORIES[categoryKey]
 
-  const items = useMemo(() => {
-    return names
-      .map(name => ({ name, count: GAMES.filter(g => g[categoryKey].includes(name)).length }))
-      .sort((a, b) => sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name))
-  }, [names, categoryKey, sortDir])
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) =>
+      sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    )
+  }, [items, sortDir])
 
   return (
     <div className="category-block search-filter-block">
@@ -119,7 +157,7 @@ function FilterBlock({ categoryKey, activeValue, buildUrl }) {
       </div>
       <div className="category-scrollable-list">
         <ul>
-          {items.map(item => {
+          {sortedItems.map(item => {
             const isActive = activeValue === item.name
             return (
               <li key={item.name}>
@@ -129,7 +167,7 @@ function FilterBlock({ categoryKey, activeValue, buildUrl }) {
                   aria-current={isActive ? 'true' : undefined}
                 >
                   <span className="cat-name">{item.name}</span>
-                  <span className="cat-count">({item.count})</span>
+                  {item.count != null && <span className="cat-count">({item.count})</span>}
                 </Link>
               </li>
             )
@@ -143,12 +181,79 @@ function FilterBlock({ categoryKey, activeValue, buildUrl }) {
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
+  // Live state from backend
+  const [games, setGames] = useState([])
+  const [categoryItems, setCategoryItems] = useState({ genres: [], mechanics: [], themes: [] })
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // Fetch every game (page by page) and the categories from the backend (same API as HomePage)
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchSearchData() {
+      // Categories for the sidebar
+      fetch(`${API_BASE_URL}/games/categories`)
+        .then(res => (res.ok ? res.json() : null))
+        .then(catData => {
+          if (cancelled || !catData) return
+          setCategoryItems({
+            genres: catData.genres || [],
+            mechanics: catData.mechanics || [],
+            themes: catData.themes || []
+          })
+        })
+        .catch(err => console.warn('Could not load categories:', err))
+
+      // All games. Fall back to the popular list if there is no /games endpoint.
+      const onPage = (gamesSoFar) => {
+        if (cancelled) return
+        setGames(gamesSoFar.map(normalizeGame))
+        setLoading(false) // show the first page straight away, keep loading the rest
+      }
+
+      try {
+        let ok = await fetchAllPages('/games', onPage, () => cancelled)
+        if (!ok && !cancelled) ok = await fetchAllPages('/games/popular', onPage, () => cancelled)
+        if (!ok && !cancelled) setLoadError(true)
+      } catch (err) {
+        console.warn('Could not load live backend data for search:', err)
+        if (!cancelled) setLoadError(true)
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          setLoadingMore(false)
+        }
+      }
+    }
+
+    setLoadingMore(true)
+    fetchSearchData()
+    return () => { cancelled = true }
+  }, [])
+
+  // If the categories endpoint returned nothing, build the lists from the games instead
+  const sidebarItems = useMemo(() => {
+    const result = {}
+    for (const key of Object.keys(CATEGORIES)) {
+      if (categoryItems[key].length > 0) {
+        result[key] = categoryItems[key]
+      } else {
+        const counts = {}
+        games.forEach(g => g[key].forEach(name => { counts[name] = (counts[name] || 0) + 1 }))
+        result[key] = Object.entries(counts).map(([name, count]) => ({ name, count }))
+      }
+    }
+    return result
+  }, [categoryItems, games])
+
   // From the header search bar
   const q = (searchParams.get('q') ?? '').trim()
   const scopeKey = SCOPES[searchParams.get('category')] ? searchParams.get('category') : 'all'
   const scope = SCOPES[scopeKey]
 
-  // From the sidebar
+  // From the sidebar / home page links
   const filters = Object.fromEntries(
     Object.entries(CATEGORIES).map(([key, cat]) => [key, searchParams.get(cat.param)])
   )
@@ -161,11 +266,13 @@ export default function SearchPage() {
     return str ? `/search?${str}` : '/search'
   }
 
+  const paramsKey = searchParams.toString()
+
   const results = useMemo(() => {
     if (scope.unsupported) return []
     const needle = q.toLowerCase()
 
-    const filtered = GAMES.filter(game => {
+    const filtered = games.filter(game => {
       // Exact sidebar filters
       for (const [key, value] of Object.entries(filters)) {
         if (value && !game[key].includes(value)) return false
@@ -176,13 +283,12 @@ export default function SearchPage() {
     })
 
     return filtered.sort((a, b) => {
-      const diff = sort === 'rating'
-        ? parseFloat(a.rating) - parseFloat(b.rating)
-        : a.title.localeCompare(b.title)
+      const diff = sort === 'rating' ? a.rating - b.rating : a.title.localeCompare(b.title)
       return dir === 'asc' ? diff : -diff
     })
     // filters is rebuilt each render, so depend on the URL instead
-  }, [q, scope, searchParams.toString(), sort, dir])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [games, paramsKey])
 
   const changeSort = (newSort) => {
     // Rating defaults to highest first, name to A–Z
@@ -200,6 +306,39 @@ export default function SearchPage() {
     ? `Results for “${q}”${scopeKey !== 'all' ? ` in ${scope.label}` : ''}`
     : 'All games'
 
+  // What to show when there are no results
+  const renderEmptyState = () => {
+    let title, text
+    if (loading) {
+      title = 'Loading games…'
+      text = ''
+    } else if (loadError) {
+      title = 'Could not load games'
+      text = 'The server did not respond. Check that the backend is running and try again.'
+    } else if (scope.unsupported) {
+      title = `Searching ${scope.label.toLowerCase()} isn't available yet`
+      text = "Pick another category in the search bar's dropdown."
+    } else {
+      title = 'No games found'
+      text = 'Try a different search in the bar at the top, or remove a filter.'
+    }
+
+    return (
+      <div className="recommendations-box">
+        <div className="logged-out-rec-placeholder">
+          <div className="placeholder-icon">🎲</div>
+          <h3>{title}</h3>
+          {text && <p>{text}</p>}
+          {!loading && !loadError && (
+            <div className="placeholder-buttons">
+              <Link to="/search" className="rec-auth-btn login">Clear search</Link>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="home-container">
       <div className="home-layout">
@@ -213,6 +352,7 @@ export default function SearchPage() {
             <FilterBlock
               key={key}
               categoryKey={key}
+              items={sidebarItems[key]}
               activeValue={filters[key]}
               buildUrl={buildUrl}
             />
@@ -225,9 +365,12 @@ export default function SearchPage() {
             <div className="section-header search-results-header">
               <div>
                 <h2>{heading}</h2>
-                <span className="search-meta">
-                  {results.length} {results.length === 1 ? 'game' : 'games'}
-                </span>
+                {!loading && (
+                  <span className="search-meta">
+                    {results.length} {results.length === 1 ? 'game' : 'games'}
+                    {loadingMore && ' (loading more…)'}
+                  </span>
+                )}
               </div>
 
               <div className="search-sort-controls">
@@ -292,55 +435,53 @@ export default function SearchPage() {
 
             {results.length > 0 ? (
               <div className="popular-list">
-                {results.map(game => (
-                  <div key={game.id} className="popular-item-card">
-                    <Link to={`/game/${game.id}`} className="popular-main-link" aria-label={`View ${game.title} game page`}>
-                      <div className="popular-main-info">
-                        <span className="popular-name">{game.title}</span>
-                        <span className="search-meta">{game.year} · {game.players} players</span>
+                {results.map(game => {
+                  // Same splash background as the home page's popular list
+                  const splashStyle = game.image
+                    ? {
+                        backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.90) 0%, rgba(26, 34, 52, 0.72) 100%), url("${game.image}")`
+                      }
+                    : {}
+                  const tags = (game.genres.length > 0 ? game.genres : game.tags).slice(0, 3)
+                  const meta = [game.year, game.players && `${game.players} players`].filter(Boolean).join(' · ')
 
-                        {game.genres.length > 0 && (
-                          <div className="popular-tags">
-                            {game.genres.map(tag => (
-                              <span key={tag} className="tag-badge">{tag}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
+                  return (
+                    <div key={game.id} className="popular-item-card">
+                      <Link
+                        to={`/game/${game.id}`}
+                        className="popular-main-link"
+                        style={splashStyle}
+                        aria-label={`View ${game.title} game page`}
+                      >
+                        <div className="popular-main-info">
+                          <span className="popular-name">{game.title}</span>
+                          {meta && <span className="search-meta">{meta}</span>}
 
-                    <Link
-                      to={`/game/${game.id}#reviews`}
-                      className="popular-rating-bubble"
-                      title={`View reviews for ${game.title} (${parseFloat(game.rating).toFixed(1)} stars)`}
-                      aria-label={`View reviews for ${game.title}`}
-                    >
-                      <StarRating rating={game.rating} />
-                      <span className="rating-score-text">{parseFloat(game.rating).toFixed(1)}</span>
-                    </Link>
-                  </div>
-                ))}
+                          {tags.length > 0 && (
+                            <div className="popular-tags">
+                              {tags.map(tag => (
+                                <span key={tag} className="tag-badge">{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+
+                      <Link
+                        to={`/game/${game.id}#reviews`}
+                        className="popular-rating-bubble"
+                        title={`View reviews for ${game.title} (${game.rating.toFixed(1)} stars)`}
+                        aria-label={`View reviews for ${game.title}`}
+                      >
+                        <StarRating rating={game.rating} />
+                        <span className="rating-score-text">{game.rating.toFixed(1)}</span>
+                      </Link>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
-              <div className="recommendations-box">
-                <div className="logged-out-rec-placeholder">
-                  <div className="placeholder-icon">🎲</div>
-                  {scope.unsupported ? (
-                    <>
-                      <h3>Searching {scope.label.toLowerCase()} isn't available yet</h3>
-                      <p>Pick another category in the search bar's dropdown.</p>
-                    </>
-                  ) : (
-                    <>
-                      <h3>No games found</h3>
-                      <p>Try a different search in the bar at the top, or remove a filter.</p>
-                    </>
-                  )}
-                  <div className="placeholder-buttons">
-                    <Link to="/search" className="rec-auth-btn login">Clear search</Link>
-                  </div>
-                </div>
-              </div>
+              renderEmptyState()
             )}
           </div>
         </section>
