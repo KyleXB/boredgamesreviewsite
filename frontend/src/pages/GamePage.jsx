@@ -5,6 +5,8 @@ import './GamePage.css'
 
 const API_BASE_URL = 'http://localhost:3001/api'
 
+const REVIEWS_PER_PAGE = 5
+
 function formatRange(min, max, unit) {
   if (min == null && max == null) return 'Not available'
   if (min == null) return `Up to ${max} ${unit}`
@@ -48,6 +50,8 @@ export default function GamePage() {
   const { user, token } = useAuth()
   const [isSavingReview, setIsSavingReview] = useState(false)
   const [reviewError, setReviewError] = useState('')
+  const [reviewSort, setReviewSort] = useState('date')
+  const [currentReviewPage, setCurrentReviewPage] = useState(1)
   const currentReview = game?.reviews?.find(
     (review) => review.userId === user?.id
   )
@@ -63,6 +67,29 @@ export default function GamePage() {
     return event.clientX < rect.left + rect.width / 2 ? star - 0.5 : star
   }
   const displayedRating = hoveredRating || reviewRating
+
+  const writtenReviews = reviews.filter((review) => review.content?.trim())
+
+  const sortedWrittenReviews = [...writtenReviews].sort((a, b) => {
+    if (reviewSort === 'score') {
+      return (
+        Number(b.rating) - Number(a.rating) ||
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    }
+    // Default: newest first
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
+  const reviewPageCount = Math.ceil(
+    sortedWrittenReviews.length / REVIEWS_PER_PAGE
+  )
+  const currentPage = Math.min(currentReviewPage, reviewPageCount || 1)
+  const paginatedReviews = sortedWrittenReviews.slice(
+    (currentPage - 1) * REVIEWS_PER_PAGE,
+    currentPage * REVIEWS_PER_PAGE
+  )
+
 
   useEffect(() => {
     const controller = new AbortController()
@@ -164,150 +191,236 @@ export default function GamePage() {
   return (
     <main className="game-page">
 
-      <div className='game-page__media'>
-        <div className="game-gallery">
-          <div className="game-image">
-            {game.image || game.thumbnail ? (
-              <img
-                className="game-image__card"
-                src={game.image || game.thumbnail}
-                alt={game.title}
-              />
-            ) : (
-              <div className="game-image__card game-image__placeholder">
-                No image available
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="game-ratings">
-          <div>
-            <span>Your rating</span>
-              <div
-                className="game-stars"
-                aria-label={
-                  userRating
-                    ? `Your rating: ${userRating} out of 5`
-                    : 'Your rating: not rated'
-                }
-              >
-                <RatingStars rating={userRating} />
-                <strong>{userRating ? `${userRating.toFixed(1)}/5` : '—/5'}</strong>
-              </div>
+      <div className="game-page__top-layout">
+        <div className='game-page__media'>
+          <div className="game-gallery">
+            <div className="game-image">
+              {game.image || game.thumbnail ? (
+                <img
+                  className="game-image__card"
+                  src={game.image || game.thumbnail}
+                  alt={game.title}
+                />
+              ) : (
+                <div className="game-image__card game-image__placeholder">
+                  No image available
+                </div>
+              )}
             </div>
           </div>
 
-          <button type="button" className="game-page__review-button" onClick={openReviewModal}>
-            {hasReviewed ? 'Edit your review' : 'Write a review'}
-          </button>
-      </div>
-
-
-      <div className="game-page__details">
-        <div className="game-page__title-row">
-          <div className="game-page__heading">
-            <h1 className="game-page__title">{game.title}</h1>
-            {game.yearPublished != null && (
-              <span className="game-page__year">({game.yearPublished})</span>
-            )}
-          </div>
-
-          <div className="game-page__global-rating">
-            <span className="game-page__global-label">Global rating</span>
-
-            <div className="game-page__global-rating-main">
-              <RatingStars
-                rating={averageRating ?? 0}
-                className="game-page__global-stars"
-              />
-              <div className="game-page__global-rating-score">
-                <strong>
-                  {averageRating == null ? '—' : averageRating.toFixed(1)}
-                  <small>/5</small>
-                </strong>
-                <span className="game-page__global-rating-count">
-                  {reviews.length} {reviews.length === 1 ? 'rating' : 'ratings'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="game-page__facts">
-          <div className="game-page__fact">
-            <span>Players</span>
-            <strong>{formatRange(game.minPlayers, game.maxPlayers, 'players')}</strong>
-          </div>
-
-          <div className="game-page__fact">
-            <span>Play time</span>
-            <strong>{formatRange(game.minPlaytime, game.maxPlaytime, 'min')}</strong>
-          </div>
-
-          <div className="game-page__fact">
-            <span>Age</span>
-            <strong>{game.minAge == null ? 'Not available' : `${game.minAge}+`}</strong>
-          </div>
-
-          <div className="game-page__fact">
-            <span>Publisher</span>
-            <strong>{game.publisher || 'Not available'}</strong>
-          </div>
-        </div>
-
-        <section className="game-page__about">
-          <h2>About this game</h2>
-          <p>
-            {game.description || 'No description available.'}
-          </p>
-        </section>
-
-        <section className="game-page__tags" aria-label="Game categories and tags">
-          {[
-            { label: 'Categories', category: 'genres', items: game.genres },
-            { label: 'Mechanics', category: 'mechanics', items: game.mechanics },
-          ]
-            .filter(({ items }) => items?.length)
-            .map(({ label, category, items }) => (
-              <div className="game-page__tag-group" key={label}>
-                <span className="game-page__tag-label">{label}</span>
-
-                <div className="game-page__tag-list">
-                  {items.map((item) => (
-                    <Link
-                      className="game-page__tag"
-                      key={item.id}
-                      to={`/search?category=${category}&q=${encodeURIComponent(item.name)}`}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+          <div className="game-ratings">
+            <div>
+              <span>Your rating</span>
+                <div
+                  className="game-stars"
+                  aria-label={
+                    userRating
+                      ? `Your rating: ${userRating} out of 5`
+                      : 'Your rating: not rated'
+                  }
+                >
+                  <RatingStars rating={userRating} />
+                  <strong>{userRating ? `${userRating.toFixed(1)}/5` : '—/5'}</strong>
                 </div>
               </div>
-            ))}
-        </section>
+            </div>
 
-        <section className="game-page__expansions">
-          <h2>Expansions</h2>
+            <button type="button" className="game-page__review-button" onClick={openReviewModal}>
+              {hasReviewed ? 'Edit your review' : 'Write a review'}
+            </button>
+        </div>
 
-          <div className="game-page__expansion-list">
-            {game.expansions?.length ? (
-              game.expansions.map((expansion) => (
-                <Link
-                  key={expansion.id}
-                  to={`/game/${expansion.id}`}
-                  className="game-page__expansion-card"
-                >
-                  {expansion.title}
-                </Link>
-              ))
-            ) : (
-              <p>No expansions listed.</p>
-            )}
+        <div className="game-page__details">
+          <div className="game-page__title-row">
+            <div className="game-page__heading">
+              <h1 className="game-page__title">{game.title}</h1>
+              {game.yearPublished != null && (
+                <span className="game-page__year">({game.yearPublished})</span>
+              )}
+            </div>
+
+            <div className="game-page__global-rating">
+              <span className="game-page__global-label">Global rating</span>
+
+              <div className="game-page__global-rating-main">
+                <RatingStars
+                  rating={averageRating ?? 0}
+                  className="game-page__global-stars"
+                />
+                <div className="game-page__global-rating-score">
+                  <strong>
+                    {averageRating == null ? '—' : averageRating.toFixed(1)}
+                    <small>/5</small>
+                  </strong>
+                  <span className="game-page__global-rating-count">
+                    {reviews.length} {reviews.length === 1 ? 'rating' : 'ratings'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
+
+          <div className="game-page__facts">
+            <div className="game-page__fact">
+              <span>Players</span>
+              <strong>{formatRange(game.minPlayers, game.maxPlayers, 'players')}</strong>
+            </div>
+
+            <div className="game-page__fact">
+              <span>Play time</span>
+              <strong>{formatRange(game.minPlaytime, game.maxPlaytime, 'min')}</strong>
+            </div>
+
+            <div className="game-page__fact">
+              <span>Age</span>
+              <strong>{game.minAge == null ? 'Not available' : `${game.minAge}+`}</strong>
+            </div>
+
+            <div className="game-page__fact">
+              <span>Publisher</span>
+              <strong>{game.publisher || 'Not available'}</strong>
+            </div>
+          </div>
+
+          <section className="game-page__about">
+            <h2>About this game</h2>
+            <p>
+              {game.description || 'No description available.'}
+            </p>
+          </section>
+
+          <section className="game-page__tags" aria-label="Game categories and tags">
+            {[
+              { label: 'Categories', category: 'genres', items: game.genres },
+              { label: 'Mechanics', category: 'mechanics', items: game.mechanics },
+            ]
+              .filter(({ items }) => items?.length)
+              .map(({ label, category, items }) => (
+                <div className="game-page__tag-group" key={label}>
+                  <span className="game-page__tag-label">{label}</span>
+
+                  <div className="game-page__tag-list">
+                    {items.map((item) => (
+                      <Link
+                        className="game-page__tag"
+                        key={item.id}
+                        to={`/search?category=${category}&q=${encodeURIComponent(item.name)}`}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </section>
+
+          <section className="game-page__expansions">
+            <h2>Expansions</h2>
+
+            <div className="game-page__expansion-list">
+              {game.expansions?.length ? (
+                game.expansions.map((expansion) => (
+                  <Link
+                    key={expansion.id}
+                    to={`/game/${expansion.id}`}
+                    className="game-page__expansion-card"
+                  >
+                    {expansion.title}
+                  </Link>
+                ))
+              ) : (
+                <p>No expansions listed.</p>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
+
+      <section className="game-page__reviews" aria-labelledby="game-reviews-title">
+        <div className="game-page__reviews-heading">
+          <h2 id="game-reviews-title">Reviews ({writtenReviews.length})</h2>
+
+          <label className="game-page__review-sort">
+            Sort by
+            <select
+              value={reviewSort}
+              onChange={(event) => {
+                setReviewSort(event.target.value) 
+                setCurrentReviewPage(1)
+              }}
+            >
+              <option value="date">Date</option>
+              <option value="score">Score</option>
+            </select>
+          </label>
+        </div>
+
+        {sortedWrittenReviews.length > 0 ? (
+          <>
+            <div className="game-page__review-list">
+              {paginatedReviews.map((review) => (
+                <article className="game-page__review" key={review.id}>
+                  <header className="game-page__review-header">
+                    <div className="game-page__review-author">
+                      <strong>{review.user?.username || 'User'}</strong>
+
+                      <div className="game-page__review-rating">
+                        <RatingStars rating={review.rating} />
+                        <span>{Number(review.rating).toFixed(1)}/5</span>
+                      </div>
+                    </div>
+
+                    <time dateTime={review.createdAt}>
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </time>
+                  </header>
+
+                  <p>{review.content}</p>
+                </article>
+              ))}
+            </div> 
+            {reviewPageCount > 1 && (
+              <nav className="game-page__review-pagination" aria-label="Review pages">
+                <button
+                  type="button"
+                  className="game-page__review-page"
+                  onClick={() => setCurrentReviewPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: reviewPageCount }, (_, index) => index + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      className="game-page__review-page"
+                      aria-current={currentPage === page ? 'page' : undefined}
+                      onClick={() => setCurrentReviewPage(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+
+                <button
+                  type="button"
+                  className="game-page__review-page"
+                  onClick={() => setCurrentReviewPage(currentPage + 1)}
+                  disabled={currentPage === reviewPageCount}
+                >
+                  Next
+                </button>
+              </nav>
+            )}
+          </>
+        ) : (
+          <p className="game-page__no-reviews">No written reviews yet.</p>
+        )}
+      </section>
+      
 
 
 
