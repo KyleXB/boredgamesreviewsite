@@ -125,6 +125,40 @@ export default function GamePage() {
     return () => controller.abort()
   }, [gameId])
 
+  useEffect(() => {
+    if (!isReviewOpen) return
+
+    const preventBackgroundScroll = (event) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest('.review-modal')
+      ) {
+        return
+      }
+
+      event.preventDefault()
+    }
+
+    const options = { capture: true, passive: false }
+
+    document.addEventListener('wheel', preventBackgroundScroll, options)
+    document.addEventListener('touchmove', preventBackgroundScroll, options)
+
+    return () => {
+      document.removeEventListener('wheel', preventBackgroundScroll, options)
+      document.removeEventListener('touchmove', preventBackgroundScroll, options)
+    }
+  }, [isReviewOpen])
+
+  useEffect(() => {
+    setIsReviewOpen(false)
+    setReviewRating(0)
+    setReviewText('')
+    setHoveredRating(0)
+    setReviewError('')
+    setCurrentReviewPage(1)
+  }, [gameId])
+
   if (loading) return <main className="game-page">Loading game…</main>
   if (error) return <main className="game-page">{error}</main>
   if (!game) return null

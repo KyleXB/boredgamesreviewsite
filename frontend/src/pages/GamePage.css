@@ -319,6 +319,7 @@
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-h);
+  overscroll-behavior: contain;
 }
 
 .review-modal__close {
