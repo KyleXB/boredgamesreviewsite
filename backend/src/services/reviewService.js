@@ -43,6 +43,25 @@ const reviewService = {
       content: content?.trim() || null,
     })
   },
+
+  async deleteReview({ userId, gameId }) {
+    if (typeof gameId !== 'string' || !gameId.trim()) {
+      const error = new Error('Game ID is required.')
+      error.status = 400
+      throw error
+    }
+
+    const deleted = await reviewRepository.deleteForUserAndGame({
+      userId,
+      gameId: gameId.trim(),
+    })
+
+    if (!deleted) {
+      const error = new Error('Review not found.')
+      error.status = 404
+      throw error
+    }
+  },
 }
 
 module.exports = reviewService

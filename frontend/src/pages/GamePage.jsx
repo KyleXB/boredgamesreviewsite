@@ -52,6 +52,7 @@ export default function GamePage() {
   const [reviewError, setReviewError] = useState('')
   const [reviewSort, setReviewSort] = useState('date')
   const [currentReviewPage, setCurrentReviewPage] = useState(1)
+  const [isDeletingReview, setIsDeletingReview] = useState(false)
   const currentReview = game?.reviews?.find(
     (review) => review.userId === user?.id
   )
@@ -185,6 +186,48 @@ export default function GamePage() {
       setReviewError(error.message)
     } finally {
       setIsSavingReview(false)
+    }
+  }
+
+  async function handleDeleteReview() {
+    if (!token || !user || !hasReviewed) return
+
+    if (!window.confirm('Delete your review for this game?')) return
+
+    setIsDeletingReview(true)
+    setReviewError('')
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/reviews/${encodeURIComponent(gameId)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not delete your review.')
+      }
+
+      setGame((currentGame) => ({
+        ...currentGame,
+        reviews: (currentGame.reviews || []).filter(
+          (review) => review.userId !== user.id
+        ),
+      }))
+
+      setReviewRating(0)
+      setReviewText('')
+      setIsReviewOpen(false)
+    } catch (error) {
+      setReviewError(error.message)
+    } finally {
+      setIsDeletingReview(false)
     }
   }
 
@@ -429,14 +472,12 @@ export default function GamePage() {
       {isReviewOpen && (
         <div
           className="review-modal-backdrop"
-          onClick={() => setIsReviewOpen(false)}
         >
           <section
             className="review-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="review-modal-title"
-            onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
@@ -522,14 +563,27 @@ export default function GamePage() {
               </div>
 
               {reviewError && <p role="alert">{reviewError}</p>}
-              <button
-                type="button"
-                className="review-modal__save"
-                onClick={handleSaveReview}
-                disabled={isSavingReview}
-              >
-                {isSavingReview ? 'Saving…' : 'Save'}
-              </button>
+              <div className="review-modal__actions">
+                {hasReviewed && (
+                  <button
+                    type="button"
+                    className="review-modal__delete"
+                    onClick={handleDeleteReview}
+                    disabled={isSavingReview || isDeletingReview}
+                  >
+                    {isDeletingReview ? 'Deleting…' : 'Delete review'}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="review-modal__save"
+                  onClick={handleSaveReview}
+                  disabled={isSavingReview || isDeletingReview}
+                >
+                  {isSavingReview ? 'Saving…' : 'Save'}
+                </button>
+              </div>
             </div>
           </section>
         </div>

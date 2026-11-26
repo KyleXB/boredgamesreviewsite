@@ -21,4 +21,19 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 })
 
+router.delete('/:gameId', authenticateToken, async (req, res) => {
+  try {
+    await reviewService.deleteReview({
+      userId: req.user.id,
+      gameId: req.params.gameId,
+    })
+
+    res.status(200).json({ message: 'Review deleted.' })
+  } catch (error) {
+    res.status(error.status || 500).json({
+      error: error.message || 'Could not delete review.',
+    })
+  }
+})
+
 module.exports = router

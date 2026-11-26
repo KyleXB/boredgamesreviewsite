@@ -30,6 +30,14 @@ const reviewRepository = {
       },
     })
   },
+
+  async deleteForUserAndGame({ userId, gameId }) {
+    const result = await prisma.review.deleteMany({
+      where: { userId, gameId },
+    })
+
+    return result.count > 0
+  },
 }
 
 module.exports = reviewRepository

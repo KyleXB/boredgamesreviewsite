@@ -441,6 +441,12 @@
   font: inherit;
 }
 
+.review-modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
 .review-modal__save {
   align-self: center;
   min-width: 150px;
@@ -454,6 +460,26 @@
 
 .review-modal__save:hover {
   border-color: currentColor;
+}
+
+.review-modal__delete {
+  min-width: 150px;
+  padding: 10px 20px;
+  border: 1px solid #e05a5a;
+  border-radius: 6px;
+  background: transparent;
+  color: #e05a5a;
+  cursor: pointer;
+}
+
+.review-modal__delete:hover {
+  border-color: #ff7777;
+  color: #ff7777;
+}
+
+.review-modal__delete:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .rating-stars {
