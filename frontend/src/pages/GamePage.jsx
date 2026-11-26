@@ -369,7 +369,19 @@ export default function GamePage() {
                     to={`/game/${expansion.id}`}
                     className="game-page__expansion-card"
                   >
-                    {expansion.title}
+                    {expansion.image || expansion.thumbnail ? (
+                      <img
+                        className="game-page__expansion-image"
+                        src={expansion.image || expansion.thumbnail}
+                        alt={expansion.title}
+                      />
+                    ) : (
+                      <span className="game-page__expansion-image game-page__expansion-image--placeholder">
+                        No image
+                      </span>
+                    )}
+
+                    <span className="game-page__expansion-title">{expansion.title}</span>
                   </Link>
                 ))
               ) : (

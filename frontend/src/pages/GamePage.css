@@ -25,6 +25,7 @@
   flex-direction: column;
   align-items: center;
   margin-left: 48px;
+  margin-top: 16px;
 }
 
 .game-page__details {
@@ -182,19 +183,36 @@
 }
 
 .game-page__expansion-card {
-  display: grid;
-  place-items: center;
+  display: flex;
   flex: 0 0 200px;
-  aspect-ratio: 3 / 4;
-  padding: 16px;
-  box-sizing: border-box;
-  border: 1px solid #777;
+  flex-direction: column;
   color: inherit;
   text-align: center;
   text-decoration: none;
 }
 
-.game-page__expansion-card:hover {
+.game-page__expansion-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  box-sizing: border-box;
+  border: 0;
+  background: transparent;
+  object-fit: contain;
+}
+
+.game-page__expansion-image--placeholder {
+  display: grid;
+  place-items: center;
+  color: #aaa;
+}
+
+.game-page__expansion-title {
+  margin-top: 10px;
+  line-height: 1.35;
+}
+
+.game-page__expansion-card:hover .game-page__expansion-image {
   border-color: currentColor;
 }
 
