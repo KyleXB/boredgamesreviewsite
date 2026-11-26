@@ -4,22 +4,17 @@
   box-sizing: border-box;
   margin: 0;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 72px;
   overflow-x: clip;
   text-align: left;
 }
 
-.game-page__top-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 72px;
-  width: 100%;
-  min-width: 0;
-}
-
 .game-page__media {
+  position: sticky;
+  top: 32px;
+  align-self: flex-start;
   display: flex;
   flex: 0 0 350px;
   flex-direction: column;
